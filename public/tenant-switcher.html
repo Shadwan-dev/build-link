@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Selector de Tenant</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .tenant-btn { 
+      margin: 10px; 
+      padding: 15px 30px; 
+      border: none; 
+      color: white; 
+      cursor: pointer; 
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Selecciona un tenant para probar:</h1>
+  
+  <button class="tenant-btn" style="background:#3b82f6" 
+          onclick="window.location.href='/?tenant=empresa-1'">
+    Empresa 1
+  </button>
+  
+  <button class="tenant-btn" style="background:#10b981" 
+          onclick="window.location.href='/?tenant=empresa-2'">
+    Empresa 2
+  </button>
+  
+  <button class="tenant-btn" style="background:#8b5cf6" 
+          onclick="window.location.href='/'">
+    Default
+  </button>
+</body>
+</html>
