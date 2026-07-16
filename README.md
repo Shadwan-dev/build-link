@@ -1,541 +1,295 @@
-📋 README Profesional - AKΠ S.R.L.
-🏢 PLATAFORMA CORPORATIVA AKΠ S.R.L.
-🚀 ESTADO ACTUAL DEL PROYECTO - ENERO 2024
-✅ COMPLETADO Y FUNCIONAL
-Frontend React + TypeScript + Next.js 14 - Arquitectura moderna
+¡Excelente! Aquí tienes un README completo y actualizado con todo lo que hemos construido y lo que falta por hacer.
+⚔️ Iglesia Quest - MMO RPG Bíblico
+📖 Descripción del Proyecto
 
-Diseño UI/UX profesional - Tailwind CSS personalizado
-
-Sistema de autenticación completo - Firebase Auth + Next.js Middleware
-
-Componentes principales implementados y optimizados
-
-Backend API funcional - Firebase Firestore + API Routes
-
-Despliegue listo - Configuración de producción completa
-
-🎨 COMPONENTES IMPLEMENTADOS
-Layout Principal
-✅ Header.tsx - Navegación con logo AKΠ y autenticación
-
-✅ Footer.tsx - Información completa de contacto optimizado
-
-✅ Sistema de navegación responsive
-
-Secciones Corporativas
-✅ Hero.tsx - Sección principal enfocada en Baracoa
-
-✅ Services.tsx - Servicios específicos de AKΠ S.R.L.
-
-✅ About.tsx - Historia, valores y datos legales
-
-✅ Portfolio.tsx - Catálogo de productos reales
-
-✅ Testimonials.tsx - Referencias de clientes reales
-
-✅ Contact.tsx - Formulario empresarial completo
-
-Sistema de Autenticación
-✅ /auth/login - Página de inicio de sesión con validación
-
-✅ /auth/register - Registro de usuarios con verificación email
-
-✅ Middleware de protección de rutas
-
-✅ API Auth endpoints (/api/auth/*)
-
-✅ Sesiones con cookies seguras
-
-Panel de Administración
-✅ /admin - Dashboard protegido
-
-✅ Gestión de sesiones de usuario
-
-✅ Sistema de permisos básico
-
-📁 ESTRUCTURA DEL PROYECTO
-text
-akpi-platform/
-├── app/                          # Next.js App Router
-│   ├── layout.tsx               # Layout principal con metadata
-│   ├── page.tsx                 # Página home principal
-│   ├── globals.css              # Estilos globales Tailwind
-│   ├── auth/                    # Sistema de autenticación
-│   │   ├── login/
-│   │   │   └── page.tsx         # Página de login
-│   │   └── register/
-│   │       └── page.tsx         # Página de registro
-│   ├── admin/                   # Panel de administración
-│   │   └── page.tsx             # Dashboard admin
-│   └── api/                     # API Routes
-│       └── auth/
-│           ├── session/
-│           │   └── route.ts     # Gestión de sesiones
-│           ├── register/
-│           │   └── route.ts     # Registro de usuarios
-│           └── logout/
-│               └── route.ts     # Cierre de sesión
-├── components/                  # Componentes React
-│   ├── layout/
-│   │   ├── Header.tsx          # Header con logo y auth
-│   │   └── Footer.tsx          # Footer optimizado
-│   ├── sections/               # Secciones de la página
-│   │   ├── Hero.tsx
-│   │   ├── Services.tsx
-│   │   ├── About.tsx
-│   │   ├── Portfolio.tsx
-│   │   ├── Testimonials.tsx
-│   │   └── Contact.tsx
-│   └── tenant/
-│       └── ClientProvider.tsx  # Configuración del cliente
-├── public/                     # Archivos estáticos
-│   ├── akpi-logo.png          # Logo principal de la empresa
-│   └── favicon.ico            # Favicon
-├── src/
-│   ├── config/
-│   │   └── client-config.ts    # Datos específicos de AKΠ
-│   ├── lib/
-│   │   ├── firebase.ts        # Configuración Firebase Client
-│   │   └── firebase-admin.ts  # Configuración Firebase Admin
-│   └── types/
-│       └── index.ts           # Tipos TypeScript
-├── middleware.ts              # Middleware para protección rutas
-├── next.config.js            # Configuración Next.js optimizada
-├── tailwind.config.js        # Configuración Tailwind CSS
-├── postcss.config.js         # Configuración PostCSS
-├── package.json              # Dependencias y scripts
-└── .env.local               # Variables de entorno (NO COMMIT)
-🔧 CONFIGURACIÓN TÉCNICA
-Stack Tecnológico
+Iglesia Quest es un MMO RPG educativo diseñado para dinámicas de iglesia, donde los jugadores aprenden sobre la Biblia mientras completan misiones, derrotan jefes bíblicos y compiten en un leaderboard global. El juego combina mecánicas de RPG clásico con contenido bíblico, fomentando el aprendizaje colaborativo.
+✅ LO QUE YA ESTÁ IMPLEMENTADO
+🎮 Sistema Core del Juego
+Característica Estado Descripción
+Sistema de Clases ✅ Completado 4 clases: Guerrero, Sacerdote, Profeta, Discípulo con bonificaciones únicas
+Sistema de Niveles ✅ Completado Experiencia, subida de nivel (cada 500 puntos)
+Puntuación Global ✅ Completado Puntos acumulables para leaderboard
+Misiones Bíblicas ✅ Completado Preguntas y respuestas con versículos bíblicos
+Bonificaciones por Clase ✅ Completado +15% en categorías específicas según clase
+🏪 Sistema Económico
+Característica Estado Descripción
+Sistema de Oro ✅ Completado Moneda del juego para transacciones
+Tienda Básica ✅ Completado Compra/venta de items (en desarrollo)
+Inventario ✅ Completado Almacenamiento de items y equipo
+🌍 Mundo y Progresión
+Característica Estado Descripción
+Pueblos ✅ Completado 3 pueblos: Aldea Emaús (Nv1), Jericó (Nv5), Jerusalén (Nv10)
+Desbloqueo Progresivo ✅ Completado Pueblos se desbloquean al subir de nivel
+Mazmorras 🚧 En desarrollo Sistema de colas y matchmaking implementado
+Jefes Bíblicos ✅ Completado 5 jefes con historias bíblicas y versículos
+👥 Sistema Multiplayer
+Característica Estado Descripción
+Sistema de Colas ✅ Completado Matchmaking automático para mazmorras
+Roles (Tank/Healer/DPS) ✅ Completado Sistema de roles con bonificaciones
+Partidas en Solitario ✅ Completado Permitido cuando no hay suficientes jugadores
+Grupos Cooperativos 🚧 En desarrollo 2-3 jugadores por mazmorra
+🎨 Sistema Visual
+Característica Estado Descripción
+UI/UX Moderna ✅ Completado Glassmorphism, gradientes, animaciones
+Efectos Visuales ✅ Completado Partículas, daño flotante, confeti
+Animaciones ✅ Completado Transiciones, hover effects, loading states
+Diseño Responsive ✅ Completado Mobile/Desktop adaptable
+🔥 Backend y Persistencia
+Característica Estado Descripción
+Firebase Auth ✅ Completado Autenticación anónima
+Firestore Database ✅ Completado Estructura de datos implementada
+Sincronización Tiempo Real ✅ Completado Leaderboard y datos de jugador en vivo
+Reglas de Seguridad ✅ Completado Reglas Firestore configuradas
+🏗️ ARQUITECTURA TÉCNICA
 Frontend
-Next.js 14.1.0 - Framework React con App Router
+typescript
 
-React 18.3.1 - Biblioteca UI
+- Next.js 16 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
+- Framer Motion (animaciones)
 
-TypeScript 5.9.3 - Tipado estático
+Backend
+typescript
 
-Tailwind CSS 3.4.19 - Sistema de estilos
+- Firebase Authentication
+- Cloud Firestore
+- Firebase Storage (para futuros assets)
 
-React Router DOM 7.12.0 - Navegación
+Estructura de Carpetas
+text
 
-Backend & Base de Datos
-Firebase 12.8.0 - Backend como servicio
+src/
+├── app/ # Páginas Next.js
+│ ├── game/page.tsx # Dashboard del juego
+│ ├── layout.tsx # Layout principal
+│ └── page.tsx # Landing + selección de clase
+├── components/
+│ ├── game/ # Componentes del juego
+│ │ ├── CharacterPanel.tsx
+│ │ ├── DailyQuests.tsx
+│ │ ├── DungeonBattle.tsx
+│ │ ├── DungeonList.tsx
+│ │ ├── DungeonQueue.tsx
+│ │ ├── LeaderboardPanel.tsx
+│ │ ├── QuickQuests.tsx
+│ │ ├── Shop.tsx
+│ │ └── TownSelector.tsx
+│ └── ui/ # Componentes UI reusables
+│ ├── AnimatedCard.tsx
+│ ├── ConfettiVictory.tsx
+│ ├── FloatingDamage.tsx
+│ ├── GlowingText.tsx
+│ ├── HealthBar.tsx
+│ ├── Modal.tsx
+│ ├── ParticleEffect.tsx
+│ └── TypewriterText.tsx
+├── hooks/
+│ ├── useAuth.ts
+│ └── useFirebaseSync.ts # Sincronización con Firebase
+├── lib/
+│ ├── data/ # Datos estáticos
+│ │ ├── dungeons.ts
+│ │ ├── equipment.ts
+│ │ ├── quests.ts
+│ │ └── towns.ts
+│ ├── firebase/ # Configuración Firebase
+│ │ ├── config.ts
+│ │ └── firestore.ts
+│ ├── matchmaking/ # Sistema de colas
+│ │ └── QueueManager.ts
+│ └── types/ # Tipos TypeScript
+│ ├── game.ts
+│ └── multiplayer.ts
 
-Firebase Admin 13.6.0 - SDK Admin para servidor
+🗺️ LO QUE ESTÁ POR HACER (ROADMAP)
+🚧 FASE 1 - Completar Sistema Core (Prioridad Alta)
+Tarea Prioridad Estimación
+Sistema de Combate Completo 🔴 Alta 3 días
 
-Firestore - Base de datos NoSQL
+- Implementar habilidades especiales por clase 🔴 Alta -
+- Sistema de magia/oraciones 🟡 Media -
+- Animaciones de ataque mejoradas 🟡 Media -
+  Sistema de Equipo Completo 🔴 Alta 2 días
+- Stats afectan combate real 🔴 Alta -
+- Sistema de forja/mejora 🟡 Media -
+- Items con efectos especiales 🟢 Baja -
+  Mazmorras Multijugador 🔴 Alta 3 días
+- Invitaciones a amigos 🔴 Alta -
+- Chat en mazmorra 🟡 Media -
+- Sistema de recompensas por tiempo 🟡 Media -
+  🚧 FASE 2 - Contenido y Progresión (Prioridad Media)
+  Tarea Prioridad Estimación
+  Más Pueblos y Mazmorras 🟡 Media 5 días
+- 3 pueblos adicionales 🟡 Media -
+- 6 nuevas mazmorras 🟡 Media -
+- 15 nuevos jefes 🟡 Media -
+  Sistema de Logros 🟡 Media 2 días
+- 50+ logros bíblicos 🟡 Media -
+- Recompensas por logros 🟡 Media -
+  Eventos Especiales 🟡 Media 2 días
+- Eventos semanales de iglesia 🟡 Media -
+- Misiones temporales 🟡 Media -
+  🚧 FASE 3 - Social y Competitivo (Prioridad Media-Baja)
+  Tarea Prioridad Estimación
+  Clanes/Gremios 🟡 Media 3 días
+- Crear/clanes 🟡 Media -
+- Mazmorras de clan 🟡 Media -
+- Ranking de clanes 🟡 Media -
+  Torneos y Competencias 🟢 Baja 3 días
+- Torneos semanales 🟢 Baja -
+- Recompensas exclusivas 🟢 Baja -
+- Sistema de temporadas 🟢 Baja -
+  🚧 FASE 4 - Mejoras Visuales y de Experiencia (Prioridad Baja)
+  Tarea Prioridad Estimación
+  Sprites y Arte 🟢 Baja 7 días
+- Pixel art para personajes 🟢 Baja -
+- Animaciones de sprites 🟢 Baja -
+- Fondos temáticos 🟢 Baja -
+  Sonido y Música 🟢 Baja 3 días
+- Efectos de sonido 🟢 Baja -
+- Música ambiental por zona 🟢 Baja -
+- Voces para jefes 🟢 Baja -
+  📊 ESTADÍSTICAS ACTUALES
+  Contenido Implementado
 
-Firebase Auth - Autenticación de usuarios
+      ✅ 4 clases jugables
 
-Firebase Storage - Almacenamiento de imágenes
+      ✅ 3 pueblos (con sistema de desbloqueo)
 
-Desarrollo
-Node.js 18+ - Entorno de ejecución
+      ✅ 5 jefes bíblicos (con versículos)
 
-npm 11.6.2 - Gestor de paquetes
+      ✅ 10+ misiones bíblicas
 
-ESLint - Linting de código
+      ✅ 15+ items de equipo
 
-PostCSS - Procesamiento CSS
+      ✅ Sistema de matchmaking con roles
 
-Variables de Entorno Requeridas
-env
-# .env.local
-# Firebase Client
-NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu-proyecto-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=tu_app_id
+      ✅ Leaderboard en tiempo real
 
-# Firebase Admin (opcional para funcionalidades avanzadas)
-FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"..."}
+Código Base
 
-# Configuración de la aplicación
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-ADMIN_EMAIL=admin@akpisrl.com
-🚀 INSTALACIÓN Y CONFIGURACIÓN
-1. Clonar y preparar el proyecto
+    📁 25+ componentes TypeScript
+
+    🎨 8 componentes UI reusables
+
+    🔥 Firestore integrado con reglas personalizadas
+
+    🎮 Sistema de combate por turnos implementado
+
+🚀 CÓMO EJECUTAR EL PROYECTO
+Requisitos Previos
 bash
+
+- Node.js 18+
+- npm o yarn
+- Cuenta de Firebase (para producción)
+
+Instalación
+bash
+
 # Clonar repositorio
-git clone <tu-repositorio>
-cd akpi-platform
+
+git clone [url-del-repo]
 
 # Instalar dependencias
+
 npm install
-2. Configurar Firebase
-Crear proyecto en Firebase Console
 
-Activar Authentication (Email/Password)
+# Configurar variables de entorno (Firebase)
 
-Crear Firestore Database
-
-Configurar Storage para imágenes
-
-Copiar credenciales a .env.local
-
-3. Configurar la aplicación
-bash
-# Copiar variables de entorno
 cp .env.example .env.local
-# Editar .env.local con tus credenciales
-4. Ejecutar en desarrollo
-bash
-# Desarrollo con optimizaciones
+
+# Editar .env.local con tus credenciales de Firebase
+
+# Ejecutar en desarrollo
+
 npm run dev
 
-# Desarrollo limpio (sin extensiones problemáticas)
-npm run dev:clean
-
 # Build para producción
+
 npm run build
+npm start
 
-# Iniciar en producción
-npm run start
-🔐 SISTEMA DE AUTENTICACIÓN
-Flujo de Autenticación
-Registro → /auth/register
+Variables de Entorno Necesarias
+env
 
-Validación de formulario
+NEXT_PUBLIC_FIREBASE_API_KEY=xxx
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=xxx
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=xxx
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=xxx
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=xxx
+NEXT_PUBLIC_FIREBASE_APP_ID=xxx
 
-Creación en Firebase Auth
+📝 NOTAS PARA EL EQUIPO
+Decisiones Técnicas Importantes
 
-Verificación por email
+    Next.js App Router - Para SSR y mejores prácticas de routing
 
-Guardado en Firestore
+    Firebase sobre backend custom - Rapidez de desarrollo y escalabilidad
 
-Login → /auth/login
+    Tailwind CSS - Estilos consistentes y rápida iteración
 
-Validación credenciales
+    Componentes UI reusables - Mantenibilidad y consistencia visual
 
-Creación de sesión
+Patrones de Diseño Utilizados
 
-Cookies seguras
+    Componentización - Separación clara de responsabilidades
 
-Redirección a panel
+    Custom Hooks - Lógica reutilizable (useFirebaseSync)
 
-Protección de Rutas
+    Singleton Pattern - QueueManager para matchmaking global
 
-Middleware verifica cookies
+    Observer Pattern - Sincronización en tiempo real con Firestore
 
-Rutas /admin/* protegidas
+Pruebas Pendientes
 
-API endpoints protegidos
+    Tests unitarios para componentes críticos
 
-Endpoints API
-POST /api/auth/session - Crear/verificar sesión
+    Tests de integración para sistema de combate
 
-POST /api/auth/register - Registrar usuario en DB
+    Tests E2E para flujo completo de juego
 
-POST /api/auth/logout - Cerrar sesión
+🐛 PROBLEMAS CONOCIDOS
+Problema Estado Solución Propuesta
+Sistema de grupos aún no 100% funcional 🟡 En investigación Completar matchmaking real con Firestore
+Items equipados no afectan stats en combate 🟡 En desarrollo Implementar cálculo de stats en tiempo real
+Mazmorras solo modo solitario 🟢 Por hacer Implementar coordinación multijugador
+🤝 CONTRIBUCIONES
 
-GET /api/auth/me - Obtener datos usuario
+Para contribuir al proyecto:
 
-🎨 PERSONALIZACIÓN PARA AKΠ S.R.L.
-Datos de la Empresa
-typescript
-// src/config/client-config.ts
-export const clientConfig = {
-  company: {
-    name: "AKΠ S.R.L.",
-    slogan: "Acá, pida... y recibirá",
-    description: "Especializados en alimentos baracoenses...",
-    cif: "B-12345678",
-    founded: 2022,
-    // ...
-  },
-  contact: {
-    address: "Puente Miel, Baracoa, Guantánamo, Cuba",
-    phone: "+53 55302391",
-    whatsapp: "+5355302391",
-    email: "akpisrl@gmail.com",
-    // ...
-  }
-};
-Productos y Servicios
-Alimentos Baracoenses
+    Crear rama feature/nombre-feature
 
-Aceite de coco virgen
+    Seguir convenciones de código (ESLint + Prettier)
 
-Derivados del cacao
+    Actualizar documentación si es necesario
 
-Harinas tradicionales
+    Crear Pull Request con descripción clara
 
-Conservas naturales
+📄 LICENCIA
 
-Materiales de Construcción
+Este proyecto es para uso interno de la iglesia. Todos los derechos reservados.
+🎯 PRÓXIMO HITO
 
-Cemento y mezclas
+Completar Sistema de Combate Multijugador (estimado: 1 semana)
 
-Bloques y ladrillos
+Objetivos:
 
-Varillas corrugadas
+    Conectar matchmaking real con Firestore
 
-Pinturas y acabados
+    Implementar combate sincronizado entre jugadores
 
-Servicios Logísticos
+    Sistema de recompensas por tiempo
 
-Transporte de carga
+    Chat básico en mazmorras
 
-Delivery de alimentos
+📞 CONTACTO
 
-Distribución nacional
+Para dudas o sugerencias sobre el proyecto, contactar al equipo de desarrollo.
 
-🛠️ SCRIPTS DE DESARROLLO
-bash
-# Desarrollo básico
-npm run dev
-
-# Desarrollo limpio (sin Console Ninja)
-npm run dev:clean
-
-# Build para producción
-npm run build
-
-# Ejecutar en producción
-npm run start
-
-# Linting y type checking
-npm run lint
-npm run type-check
-
-# Limpiar caché
-npm run clean
-Scripts de Utilidad
-fix-project.bat - Soluciona problemas comunes
-
-reset-project.bat - Reinicia el proyecto completamente
-
-check-structure.bat - Verifica estructura de archivos
-
-🚨 SOLUCIÓN DE PROBLEMAS COMUNES
-Problemas de Hydration (React)
-bash
-# Limpiar caché
-npm run clean
-
-# Reinstalar dependencias
-rm -rf node_modules package-lock.json
-npm install
-
-# Iniciar en modo seguro
-npm run dev:clean
-Errores de Firebase
-Verificar credenciales en .env.local
-
-Confirmar que Firestore está activado
-
-Verificar reglas de seguridad de Firestore
-
-Errores de Build
-bash
-# Limpiar caché de Next.js
-rm -rf .next
-
-# Verificar TypeScript
-npm run type-check
-
-# Build en modo verbose
-npm run build -- --verbose
-📱 RESPONSIVE DESIGN
-Mobile-first approach
-
-Breakpoints optimizados:
-
-sm: 640px
-
-md: 768px
-
-lg: 1024px
-
-xl: 1280px
-
-Componentes adaptativos
-
-Imágenes responsive
-
-🔒 CONSIDERACIONES DE SEGURIDAD
-Nivel 1: Frontend
-Validación de formularios en cliente
-
-Sanitización de inputs
-
-Protección XSS básica
-
-Nivel 2: Backend (Firebase)
-Reglas de seguridad Firestore
-
-Autenticación por roles
-
-Validación server-side
-
-Rate limiting
-
-Nivel 3: Infraestructura
-HTTPS obligatorio
-
-Cookies httpOnly y secure
-
-Backups automáticos
-
-Monitoreo de acceso
-
-📊 MÉTRICAS DE ÉXITO
-Técnicas
-✅ Performance: Lighthouse score > 90
-
-✅ Tiempo de carga: < 2s first contentful paint
-
-✅ Responsive: Perfecto en móviles y desktop
-
-✅ Accesibilidad: WCAG 2.1 AA compliant
-
-Negocio
-✅ Conversión: > 30% visitas a contactos
-
-✅ Retención: Tiempo en página > 2 minutos
-
-✅ Satisfacción: Feedback positivo de clientes
-
-🚀 DESPLIEGUE EN PRODUCCIÓN
-Plataformas Recomendadas
-Vercel (Recomendado para Next.js)
-
-bash
-# Instalar CLI de Vercel
-npm i -g vercel
-
-# Desplegar
-vercel --prod
-Netlify
-
-bash
-# Build y deploy
-npm run build
-# Subir carpeta .next a Netlify
-Firebase Hosting
-
-bash
-# Instalar Firebase CLI
-npm i -g firebase-tools
-
-# Inicializar y desplegar
-firebase init hosting
-firebase deploy
-Configuración de Producción
-javascript
-// next.config.js - Producción
-const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
-  compress: true,
-  poweredByHeader: false,
-  images: {
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-  },
-};
-👥 ROLES Y RESPONSABILIDADES
-Frontend Developer
-Mantener y mejorar componentes React
-
-Optimizar performance
-
-Asegurar responsive design
-
-Implementar nuevas features
-
-Backend Developer
-Configurar y mantener Firebase
-
-Implementar reglas de seguridad
-
-Crear API endpoints
-
-Gestionar base de datos
-
-Content Manager
-Actualizar catálogo de productos
-
-Moderar testimonios
-
-Responder consultas
-
-Gestionar contenido dinámico
-
-📞 SOPORTE Y MANTENIMIENTO
-Canal de Comunicación
-GitHub: Repositorio del proyecto
-
-Email: akpisrl@gmail.com
-
-Teléfono: +53 55302391
-
-Documentación
-API Docs: Endpoints y ejemplos
-
-User Guide: Manual de usuario
-
-Admin Guide: Guía de administración
-
-Deployment Guide: Guía de despliegue
-
-🏁 PRÓXIMOS PASOS
-Fase 2: Panel Admin Avanzado
-CRUD completo de productos
-
-Sistema de pedidos online
-
-Gestión de inventario
-
-Reportes y analytics
-
-Fase 3: E-commerce Básico
-Carrito de compras
-
-Checkout y pagos
-
-Seguimiento de pedidos
-
-Catálogo digital descargable
-
-Fase 4: Optimizaciones
-PWA (Progressive Web App)
-
-Offline capabilities
-
-Push notifications
-
-SEO avanzado
-
-📝 NOTAS IMPORTANTES
-Logros Actuales
-✅ Frontend 100% completado y optimizado
-
-✅ Diseño profesional específico para AKΠ
-
-✅ Contenido real y verificado
-
-✅ Totalmente responsive
-
-✅ Sistema de autenticación completo
-
-✅ Backend Firebase configurado
-
-Dependencias Críticas
-✅ React 18 + TypeScript (COMPLETADO)
-
-✅ Tailwind CSS (COMPLETADO)
-
-✅ Firebase SDK (CONFIGURADO)
-
-✅ Next.js 14 (CONFIGURADO)
-
-Última actualización: Enero 2024
-Versión: 1.0.0 (Production Ready)
-Estado: ✅ Completado y Funcional
-Responsable: Equipo de Desarrollo AKΠ S.R.L.
-Contacto: akpisrl@gmail.com | +53 55302391
-
+Última actualización: 25 de Abril, 2026
+Versión actual: 0.5.0 (Pre-alpha)
+Estado: En desarrollo activo 🚀
+# build-link
