@@ -1,295 +1,224 @@
-¡Excelente! Aquí tienes un README completo y actualizado con todo lo que hemos construido y lo que falta por hacer.
-⚔️ Iglesia Quest - MMO RPG Bíblico
-📖 Descripción del Proyecto
+# 🏗️ BuildLink
 
-Iglesia Quest es un MMO RPG educativo diseñado para dinámicas de iglesia, donde los jugadores aprenden sobre la Biblia mientras completan misiones, derrotan jefes bíblicos y compiten en un leaderboard global. El juego combina mecánicas de RPG clásico con contenido bíblico, fomentando el aprendizaje colaborativo.
-✅ LO QUE YA ESTÁ IMPLEMENTADO
-🎮 Sistema Core del Juego
-Característica Estado Descripción
-Sistema de Clases ✅ Completado 4 clases: Guerrero, Sacerdote, Profeta, Discípulo con bonificaciones únicas
-Sistema de Niveles ✅ Completado Experiencia, subida de nivel (cada 500 puntos)
-Puntuación Global ✅ Completado Puntos acumulables para leaderboard
-Misiones Bíblicas ✅ Completado Preguntas y respuestas con versículos bíblicos
-Bonificaciones por Clase ✅ Completado +15% en categorías específicas según clase
-🏪 Sistema Económico
-Característica Estado Descripción
-Sistema de Oro ✅ Completado Moneda del juego para transacciones
-Tienda Básica ✅ Completado Compra/venta de items (en desarrollo)
-Inventario ✅ Completado Almacenamiento de items y equipo
-🌍 Mundo y Progresión
-Característica Estado Descripción
-Pueblos ✅ Completado 3 pueblos: Aldea Emaús (Nv1), Jericó (Nv5), Jerusalén (Nv10)
-Desbloqueo Progresivo ✅ Completado Pueblos se desbloquean al subir de nivel
-Mazmorras 🚧 En desarrollo Sistema de colas y matchmaking implementado
-Jefes Bíblicos ✅ Completado 5 jefes con historias bíblicas y versículos
-👥 Sistema Multiplayer
-Característica Estado Descripción
-Sistema de Colas ✅ Completado Matchmaking automático para mazmorras
-Roles (Tank/Healer/DPS) ✅ Completado Sistema de roles con bonificaciones
-Partidas en Solitario ✅ Completado Permitido cuando no hay suficientes jugadores
-Grupos Cooperativos 🚧 En desarrollo 2-3 jugadores por mazmorra
-🎨 Sistema Visual
-Característica Estado Descripción
-UI/UX Moderna ✅ Completado Glassmorphism, gradientes, animaciones
-Efectos Visuales ✅ Completado Partículas, daño flotante, confeti
-Animaciones ✅ Completado Transiciones, hover effects, loading states
-Diseño Responsive ✅ Completado Mobile/Desktop adaptable
-🔥 Backend y Persistencia
-Característica Estado Descripción
-Firebase Auth ✅ Completado Autenticación anónima
-Firestore Database ✅ Completado Estructura de datos implementada
-Sincronización Tiempo Real ✅ Completado Leaderboard y datos de jugador en vivo
-Reglas de Seguridad ✅ Completado Reglas Firestore configuradas
-🏗️ ARQUITECTURA TÉCNICA
-Frontend
-typescript
+[![Next.js](https://img.shields.io/badge/Next.js-16.1.4-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-12.8.0-orange?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.19-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
-- Next.js 16 (App Router)
-- React 18
-- TypeScript
-- Tailwind CSS
-- Framer Motion (animaciones)
+**BuildLink** es una plataforma moderna que conecta clientes con profesionales verificados en construcción, albañilería, carpintería y más. Encuentra al experto que necesitas para tu proyecto.
 
-Backend
-typescript
+🔗 **Demo:** [buildlink.vercel.app](https://buildlink.vercel.app)
+📦 **Repositorio:** [github.com/Shadwan-dev/build-link](https://github.com/Shadwan-dev/build-link)
 
-- Firebase Authentication
-- Cloud Firestore
-- Firebase Storage (para futuros assets)
+---
 
-Estructura de Carpetas
-text
+## ✨ Características
 
-src/
-├── app/ # Páginas Next.js
-│ ├── game/page.tsx # Dashboard del juego
-│ ├── layout.tsx # Layout principal
-│ └── page.tsx # Landing + selección de clase
-├── components/
-│ ├── game/ # Componentes del juego
-│ │ ├── CharacterPanel.tsx
-│ │ ├── DailyQuests.tsx
-│ │ ├── DungeonBattle.tsx
-│ │ ├── DungeonList.tsx
-│ │ ├── DungeonQueue.tsx
-│ │ ├── LeaderboardPanel.tsx
-│ │ ├── QuickQuests.tsx
-│ │ ├── Shop.tsx
-│ │ └── TownSelector.tsx
-│ └── ui/ # Componentes UI reusables
-│ ├── AnimatedCard.tsx
-│ ├── ConfettiVictory.tsx
-│ ├── FloatingDamage.tsx
-│ ├── GlowingText.tsx
-│ ├── HealthBar.tsx
-│ ├── Modal.tsx
-│ ├── ParticleEffect.tsx
-│ └── TypewriterText.tsx
-├── hooks/
-│ ├── useAuth.ts
-│ └── useFirebaseSync.ts # Sincronización con Firebase
-├── lib/
-│ ├── data/ # Datos estáticos
-│ │ ├── dungeons.ts
-│ │ ├── equipment.ts
-│ │ ├── quests.ts
-│ │ └── towns.ts
-│ ├── firebase/ # Configuración Firebase
-│ │ ├── config.ts
-│ │ └── firestore.ts
-│ ├── matchmaking/ # Sistema de colas
-│ │ └── QueueManager.ts
-│ └── types/ # Tipos TypeScript
-│ ├── game.ts
-│ └── multiplayer.ts
+### 🔐 Autenticación
 
-🗺️ LO QUE ESTÁ POR HACER (ROADMAP)
-🚧 FASE 1 - Completar Sistema Core (Prioridad Alta)
-Tarea Prioridad Estimación
-Sistema de Combate Completo 🔴 Alta 3 días
+- Login con Email y Contraseña
+- Login con Google (OAuth)
+- Registro de usuarios con roles
+- Verificación de email
+- Recuperación de contraseña
 
-- Implementar habilidades especiales por clase 🔴 Alta -
-- Sistema de magia/oraciones 🟡 Media -
-- Animaciones de ataque mejoradas 🟡 Media -
-  Sistema de Equipo Completo 🔴 Alta 2 días
-- Stats afectan combate real 🔴 Alta -
-- Sistema de forja/mejora 🟡 Media -
-- Items con efectos especiales 🟢 Baja -
-  Mazmorras Multijugador 🔴 Alta 3 días
-- Invitaciones a amigos 🔴 Alta -
-- Chat en mazmorra 🟡 Media -
-- Sistema de recompensas por tiempo 🟡 Media -
-  🚧 FASE 2 - Contenido y Progresión (Prioridad Media)
-  Tarea Prioridad Estimación
-  Más Pueblos y Mazmorras 🟡 Media 5 días
-- 3 pueblos adicionales 🟡 Media -
-- 6 nuevas mazmorras 🟡 Media -
-- 15 nuevos jefes 🟡 Media -
-  Sistema de Logros 🟡 Media 2 días
-- 50+ logros bíblicos 🟡 Media -
-- Recompensas por logros 🟡 Media -
-  Eventos Especiales 🟡 Media 2 días
-- Eventos semanales de iglesia 🟡 Media -
-- Misiones temporales 🟡 Media -
-  🚧 FASE 3 - Social y Competitivo (Prioridad Media-Baja)
-  Tarea Prioridad Estimación
-  Clanes/Gremios 🟡 Media 3 días
-- Crear/clanes 🟡 Media -
-- Mazmorras de clan 🟡 Media -
-- Ranking de clanes 🟡 Media -
-  Torneos y Competencias 🟢 Baja 3 días
-- Torneos semanales 🟢 Baja -
-- Recompensas exclusivas 🟢 Baja -
-- Sistema de temporadas 🟢 Baja -
-  🚧 FASE 4 - Mejoras Visuales y de Experiencia (Prioridad Baja)
-  Tarea Prioridad Estimación
-  Sprites y Arte 🟢 Baja 7 días
-- Pixel art para personajes 🟢 Baja -
-- Animaciones de sprites 🟢 Baja -
-- Fondos temáticos 🟢 Baja -
-  Sonido y Música 🟢 Baja 3 días
-- Efectos de sonido 🟢 Baja -
-- Música ambiental por zona 🟢 Baja -
-- Voces para jefes 🟢 Baja -
-  📊 ESTADÍSTICAS ACTUALES
-  Contenido Implementado
+### 👤 Roles de Usuario
 
-      ✅ 4 clases jugables
+| Rol           | Funcionalidades                                               |
+| ------------- | ------------------------------------------------------------- |
+| **Cliente**   | Buscar proveedores, publicar solicitudes, calificar servicios |
+| **Proveedor** | Gestionar ofertas, recibir solicitudes, ver estadísticas      |
+| **Admin**     | Verificar proveedores, gestionar usuarios, moderar contenido  |
 
-      ✅ 3 pueblos (con sistema de desbloqueo)
+### 📋 Módulos Principales
 
-      ✅ 5 jefes bíblicos (con versículos)
+#### Dashboard
 
-      ✅ 10+ misiones bíblicas
+- Vista personalizada según rol
+- Estadísticas en tiempo real
+- Actividad reciente
+- Acciones rápidas
 
-      ✅ 15+ items de equipo
+#### Proveedores
 
-      ✅ Sistema de matchmaking con roles
+- Listado con filtros y búsqueda
+- Perfil detallado con portafolio
+- Sistema de calificaciones y testimonios
+- Verificación de proveedores
 
-      ✅ Leaderboard en tiempo real
+#### Solicitudes
 
-Código Base
+- Creación de solicitudes por categoría
+- Gestión de estados (pendiente, aceptado, rechazado)
+- Sistema de ofertas y presupuestos
+- Notificaciones automáticas
 
-    📁 25+ componentes TypeScript
+#### Ofertas de Trabajo
 
-    🎨 8 componentes UI reusables
+- Publicación de ofertas por proveedores
+- Gestión de ofertas (crear, editar, eliminar)
+- Estadísticas de visualizaciones
+- Solicitudes de clientes
 
-    🔥 Firestore integrado con reglas personalizadas
+#### Mensajería
 
-    🎮 Sistema de combate por turnos implementado
+- Chat en tiempo real
+- Conversaciones organizadas por solicitud
+- Notificaciones de nuevos mensajes
+- Sistema de no leídos
 
-🚀 CÓMO EJECUTAR EL PROYECTO
-Requisitos Previos
-bash
+#### Notificaciones
 
-- Node.js 18+
-- npm o yarn
-- Cuenta de Firebase (para producción)
+- Campana en el navbar
+- Notificaciones en tiempo real
+- Marcado como leído
+- Historial completo
 
-Instalación
-bash
+### 🎨 Diseño
 
-# Clonar repositorio
+- Modo oscuro/claro
+- Diseño mobile-first
+- Animaciones suaves
+- UI moderna y profesional
 
-git clone [url-del-repo]
+---
 
-# Instalar dependencias
+## 🚀 Tecnologías
 
+### Frontend
+
+- **Next.js 16** - Framework React con SSR
+- **TypeScript** - Tipado estático
+- **TailwindCSS** - Estilos y diseño
+- **Framer Motion** - Animaciones
+- **Lucide React** - Iconos
+
+### Backend & Database
+
+- **Firebase Auth** - Autenticación
+- **Firestore** - Base de datos NoSQL
+- **Firebase Functions** - Serverless
+- **Firebase Storage** - Almacenamiento
+
+### Herramientas
+
+- **ESLint** - Linting
+- **Prettier** - Formateo
+- **Vercel** - Despliegue
+
+---
+
+## 📦 Instalación
+
+### Prerrequisitos
+
+- Node.js 20+
+- npm 10+
+- Firebase account
+
+### Pasos
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/Shadwan-dev/build-link.git
+cd build-link
+
+# 2. Instalar dependencias
 npm install
 
-# Configurar variables de entorno (Firebase)
-
+# 3. Configurar variables de entorno
 cp .env.example .env.local
-
 # Editar .env.local con tus credenciales de Firebase
 
-# Ejecutar en desarrollo
-
+# 4. Ejecutar en desarrollo
 npm run dev
 
-# Build para producción
-
+# 5. Construir para producción
 npm run build
 npm start
 
-Variables de Entorno Necesarias
-env
+-----------------------------------------------------
+src/
+├── app/
+│   ├── (auth)/          # Autenticación (login, register)
+│   ├── (dashboard)/     # Dashboard con sidebar
+│   │   ├── dashboard/   # Página principal
+│   │   ├── providers/   # Proveedores
+│   │   ├── requests/    # Solicitudes
+│   │   ├── jobs/        # Ofertas
+│   │   ├── messages/    # Mensajería
+│   │   ├── profile/     # Perfil de usuario
+│   │   ├── settings/    # Configuración
+│   │   └── stats/       # Estadísticas
+│   └── admin/           # Panel de administración
+├── components/
+│   ├── common/          # Componentes compartidos
+│   └── dashboard/       # Componentes del dashboard
+│       ├── client/      # Vista de cliente
+│       ├── provider/    # Vista de proveedor
+│       ├── providers/   # Componentes de proveedores
+│       ├── requests/    # Componentes de solicitudes
+│       ├── jobs/        # Componentes de ofertas
+│       ├── messages/    # Componentes de mensajería
+│       └── stats/       # Componentes de estadísticas
+├── contexts/            # Contextos de React
+├── lib/                 # Utilidades y servicios
+│   └── firebase/        # Servicios de Firebase
+├── types/               # Tipos de TypeScript
+└── styles/              # Estilos globales
+----------------------------------------------------------
+🗺️ Roadmap
 
-NEXT_PUBLIC_FIREBASE_API_KEY=xxx
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=xxx
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=xxx
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=xxx
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=xxx
-NEXT_PUBLIC_FIREBASE_APP_ID=xxx
+    PWA (Progressive Web App)
 
-📝 NOTAS PARA EL EQUIPO
-Decisiones Técnicas Importantes
+    Internacionalización (i18n)
 
-    Next.js App Router - Para SSR y mejores prácticas de routing
+    Sistema de pagos integrado
 
-    Firebase sobre backend custom - Rapidez de desarrollo y escalabilidad
+    Videollamadas
 
-    Tailwind CSS - Estilos consistentes y rápida iteración
+    Aplicación móvil (React Native)
 
-    Componentes UI reusables - Mantenibilidad y consistencia visual
+    Integración con WhatsApp Business
 
-Patrones de Diseño Utilizados
+    Panel de análisis avanzado
 
-    Componentización - Separación clara de responsabilidades
+🤝 Contribuciones
 
-    Custom Hooks - Lógica reutilizable (useFirebaseSync)
+Las contribuciones son bienvenidas. Por favor:
 
-    Singleton Pattern - QueueManager para matchmaking global
+    Fork el repositorio
 
-    Observer Pattern - Sincronización en tiempo real con Firestore
+    Crea una rama (git checkout -b feature/nueva-funcionalidad)
 
-Pruebas Pendientes
+    Commit tus cambios (git commit -m 'Añadir nueva funcionalidad')
 
-    Tests unitarios para componentes críticos
+    Push a la rama (git push origin feature/nueva-funcionalidad)
 
-    Tests de integración para sistema de combate
+    Abre un Pull Request
 
-    Tests E2E para flujo completo de juego
+📄 Licencia
 
-🐛 PROBLEMAS CONOCIDOS
-Problema Estado Solución Propuesta
-Sistema de grupos aún no 100% funcional 🟡 En investigación Completar matchmaking real con Firestore
-Items equipados no afectan stats en combate 🟡 En desarrollo Implementar cálculo de stats en tiempo real
-Mazmorras solo modo solitario 🟢 Por hacer Implementar coordinación multijugador
-🤝 CONTRIBUCIONES
+Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
+🙏 Agradecimientos
 
-Para contribuir al proyecto:
+    Next.js
 
-    Crear rama feature/nombre-feature
+    Firebase
 
-    Seguir convenciones de código (ESLint + Prettier)
+    TailwindCSS
 
-    Actualizar documentación si es necesario
+    Lucide Icons
 
-    Crear Pull Request con descripción clara
+    Unsplash - Imágenes de fondo
 
-📄 LICENCIA
+📞 Contacto
 
-Este proyecto es para uso interno de la iglesia. Todos los derechos reservados.
-🎯 PRÓXIMO HITO
+    Autor: Shadwan-dev
 
-Completar Sistema de Combate Multijugador (estimado: 1 semana)
+    Email: tu-email@ejemplo.com
 
-Objetivos:
+    GitHub: github.com/Shadwan-dev
 
-    Conectar matchmaking real con Firestore
-
-    Implementar combate sincronizado entre jugadores
-
-    Sistema de recompensas por tiempo
-
-    Chat básico en mazmorras
-
-📞 CONTACTO
-
-Para dudas o sugerencias sobre el proyecto, contactar al equipo de desarrollo.
-
-Última actualización: 25 de Abril, 2026
-Versión actual: 0.5.0 (Pre-alpha)
-Estado: En desarrollo activo 🚀
-# build-link
+⭐ Si este proyecto te ha sido útil, no olvides darle una estrella en GitHub!
+```
