@@ -6,18 +6,18 @@ import { RequestCard } from './RequestCard';
 
 interface RequestListProps {
   requests: Request[];
-  role: 'client' | 'provider';
   loading?: boolean;
   emptyMessage?: string;
-  onStatusChange?: () => void;
+  onStatusChange?: (id: string, status: 'aceptado' | 'rechazado') => void;
+  showActions?: boolean;
 }
 
 export const RequestList = ({
   requests,
-  role,
   loading = false,
   emptyMessage = 'No hay solicitudes',
   onStatusChange,
+  showActions = false,
 }: RequestListProps) => {
   if (loading) {
     return (
@@ -33,9 +33,7 @@ export const RequestList = ({
         <FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">{emptyMessage}</h3>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          {role === 'client'
-            ? 'Envía una solicitud a un proveedor para comenzar'
-            : 'Espera a que los clientes te contacten'}
+          No hay solicitudes para mostrar en este momento
         </p>
       </div>
     );
@@ -47,8 +45,8 @@ export const RequestList = ({
         <RequestCard
           key={request.id}
           request={request}
-          role={role}
           onStatusChange={onStatusChange}
+          showActions={showActions}
         />
       ))}
     </div>

@@ -4,7 +4,7 @@ import { RequestFilters } from '@/components/dashboard/requests/RequestFilters';
 import { RequestList } from '@/components/dashboard/requests/RequestList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
-import { getFilteredRequests } from '@/lib/firebase/request.service';
+import { getFilteredRequests } from '@/lib/firebase/requests.service';
 import { Request, RequestFilterOptions } from '@/types/request.types';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -40,7 +40,6 @@ export default function RequestsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
@@ -63,17 +62,14 @@ export default function RequestsPage() {
         )}
       </div>
 
-      {/* Filtros */}
       <RequestFilters
         role={currentRole || 'client'}
         filters={filters}
         onFilterChange={handleFilterChange}
       />
 
-      {/* Lista de solicitudes */}
       <RequestList
         requests={requests}
-        role={currentRole || 'client'}
         loading={loading}
         emptyMessage={
           currentRole === 'provider'
@@ -81,6 +77,7 @@ export default function RequestsPage() {
             : 'No has enviado solicitudes aún'
         }
         onStatusChange={loadRequests}
+        showActions={currentRole === 'provider'}
       />
     </div>
   );

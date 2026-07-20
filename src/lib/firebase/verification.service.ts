@@ -18,17 +18,21 @@ const getDb = (): Firestore => {
   return db;
 };
 
+// ✅ Tipo ProviderVerification - CORREGIDO
 export interface ProviderVerification {
   uid: string;
   displayName: string;
   email: string;
   phone: string;
   identification: string;
-  legalName: string; // ✅ Asegurar que existe
-  address: string; // ✅ Asegurar que existe
+  legalName: string;
+  address: string;
   specialties: string[];
   experience: number;
   description: string;
+  // ✅ Añadir country para saber de qué país es
+  country?: string;
+  // ✅ Campos de estado
   isVerified: boolean;
   verificationStatus: 'pending' | 'approved' | 'rejected' | 'not_requested';
   verificationDate?: Date;
@@ -38,19 +42,40 @@ export interface ProviderVerification {
   updatedAt: Date;
 }
 
-// ✅ Solicitar verificación
-export const requestVerification = async (
-  data: Omit<ProviderVerification, 'isVerified' | 'verificationStatus' | 'createdAt' | 'updatedAt'>
-): Promise<void> => {
+// ✅ Tipo para la solicitud (sin campos de estado)
+export type VerificationRequest = Omit<
+  ProviderVerification,
+  | 'isVerified'
+  | 'verificationStatus'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'verificationDate'
+  | 'verificationNotes'
+  | 'documents'
+>;
+
+// ✅ Solicitar verificación - CORREGIDO
+export const requestVerification = async (data: VerificationRequest): Promise<void> => {
   try {
     const dbInstance = getDb();
     const docRef = doc(dbInstance, 'verifications', data.uid);
 
-    await setDoc(docRef, {
+    // ✅ Incluir country si viene en los datos
+    const verificationData = {
       ...data,
+      country: data.country || 'CL',
       isVerified: false,
-      verificationStatus: 'pending',
+      verificationStatus: 'pending' as const,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    await setDoc(docRef, verificationData);
+
+    // ✅ También actualizar el usuario
+    const userRef = doc(dbInstance, 'users', data.uid);
+    await updateDoc(userRef, {
+      verificationStatus: 'pending',
       updatedAt: serverTimestamp(),
     });
 
@@ -62,6 +87,8 @@ export const requestVerification = async (
       'system',
       `/admin/verifications/${data.uid}`
     );
+
+    console.log('✅ Solicitud de verificación enviada para:', data.uid);
   } catch (error) {
     console.error('Error solicitando verificación:', error);
     throw new Error('Error al solicitar verificación');
@@ -105,6 +132,14 @@ export const approveVerification = async (uid: string): Promise<void> => {
       verificationDate: serverTimestamp(),
     });
 
+    // ✅ Actualizar el usuario
+    const userRef = doc(dbInstance, 'users', uid);
+    await updateDoc(userRef, {
+      isVerified: true,
+      verificationStatus: 'approved',
+      verifiedAt: serverTimestamp(),
+    });
+
     // ✅ Notificar al proveedor
     const verification = await getVerificationStatus(uid);
     if (verification) {
@@ -129,6 +164,14 @@ export const rejectVerification = async (uid: string, reason: string): Promise<v
     const docRef = doc(dbInstance, 'verifications', uid);
 
     await updateDoc(docRef, {
+      verificationStatus: 'rejected',
+      verificationNotes: reason,
+      updatedAt: serverTimestamp(),
+    });
+
+    // ✅ Actualizar usuario
+    const userRef = doc(dbInstance, 'users', uid);
+    await updateDoc(userRef, {
       verificationStatus: 'rejected',
       verificationNotes: reason,
       updatedAt: serverTimestamp(),

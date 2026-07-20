@@ -59,6 +59,10 @@ export const MessageFormModal = ({
 
     setLoading(true);
     try {
+      // ✅ Encontrar el label de la categoría seleccionada
+      const categoryLabel =
+        CATEGORY_OPTIONS.find((c) => c.value === formData.category)?.label || formData.category;
+
       await sendMessageForm({
         clientId: user.uid,
         clientName: user.displayName || 'Usuario',
@@ -66,7 +70,7 @@ export const MessageFormModal = ({
         clientPhone: user.phone || '',
         providerId,
         providerName,
-        category: formData.category,
+        category: categoryLabel, // ✅ Enviar el label, no el value
         description: formData.description,
         budget: formData.budget ? parseFloat(formData.budget) : undefined,
         timeline: formData.timeline || undefined,
@@ -78,6 +82,7 @@ export const MessageFormModal = ({
       onSuccess?.();
       onClose();
     } catch (error) {
+      console.error('Error:', error);
       toast.error('Error al enviar el mensaje');
     } finally {
       setLoading(false);
@@ -108,7 +113,7 @@ export const MessageFormModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* ✅ Categoría - Nuevo campo */}
+          {/* ✅ Categoría - CORREGIDO */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
               Categoría del trabajo *
@@ -123,8 +128,8 @@ export const MessageFormModal = ({
               >
                 <option value="">Selecciona una categoría...</option>
                 {CATEGORY_OPTIONS.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {CATEGORIES.find((c) => c.label === cat)?.icon} {cat}
+                  <option key={cat.value} value={cat.value}>
+                    {cat.icon} {cat.label}
                   </option>
                 ))}
               </select>
@@ -179,6 +184,7 @@ export const MessageFormModal = ({
                 value={formData.budget}
                 onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
                 placeholder="0"
+                min="0"
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>
@@ -217,7 +223,7 @@ export const MessageFormModal = ({
             <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4">
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 <span className="font-medium">📋 Resumen:</span> Solicitud de{' '}
-                <span className="font-medium">{formData.category}</span>
+                <span className="font-medium">{selectedCategory?.label || formData.category}</span>
                 {formData.budget &&
                   ` · Presupuesto: $${parseFloat(formData.budget).toLocaleString()}`}
                 {formData.urgency !== 'normal' &&
@@ -242,12 +248,12 @@ export const MessageFormModal = ({
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Enviando...
                 </>
               ) : (
                 <>
-                  <Send className="w-5 h-5" />
+                  <Send className="w-4 h-4" />
                   Enviar mensaje
                 </>
               )}

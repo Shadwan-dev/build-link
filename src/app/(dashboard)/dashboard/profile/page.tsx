@@ -1,15 +1,16 @@
 'use client';
 
+import { IdentificationValidator } from '@/components/profile/IdentificationValidator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import { getUserProfile, ProfileData, updateUserProfile } from '@/lib/firebase/profile.service';
 import { getVerificationStatus, requestVerification } from '@/lib/firebase/verification.service';
 import {
+  AlertCircle,
   Building2,
   Camera,
   CheckCircle,
   Clock,
-  FileText,
   Loader2,
   MapPin,
   Save,
@@ -17,7 +18,7 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
@@ -28,6 +29,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
   const [requestingVerification, setRequestingVerification] = useState(false);
+
   const [formData, setFormData] = useState<ProfileData>({
     displayName: '',
     phone: '',
@@ -39,14 +41,27 @@ export default function ProfilePage() {
     identification: '',
     legalName: '',
     address: '',
+    country: 'CL',
+    identificationValid: false,
   });
 
+  const [identificationState, setIdentificationState] = useState({
+    value: '',
+    isValid: false,
+    country: 'CL' as 'CL' | 'CU' | 'AR' | 'MX' | 'PE' | 'CO' | 'ES',
+  });
+
+  const isInitialLoad = useRef(true);
   const isProvider = currentRole === 'provider';
 
-  // Cargar perfil y verificación
+  // ============================================
+  // CARGAR PERFIL
+  // ============================================
   useEffect(() => {
     const loadData = async () => {
-      if (!user) return;
+      if (!user || !isInitialLoad.current) return;
+      isInitialLoad.current = false;
+
       setLoading(true);
       try {
         const [profileData, verificationData] = await Promise.all([
@@ -67,6 +82,14 @@ export default function ProfilePage() {
             identification: profileData.identification || '',
             legalName: profileData.legalName || '',
             address: profileData.address || '',
+            country: profileData.country || 'CL',
+            identificationValid: profileData.identificationValid || false,
+          });
+
+          setIdentificationState({
+            value: profileData.identification || '',
+            isValid: profileData.identificationValid || false,
+            country: profileData.country || 'CL',
           });
         }
 
@@ -84,31 +107,87 @@ export default function ProfilePage() {
     loadData();
   }, [user, isProvider]);
 
-  // Manejar cambios en formulario
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // ============================================
+  // HANDLERS
+  // ============================================
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
 
-  const handleSpecialtyToggle = (specialty: string) => {
+  const handleSpecialtyToggle = useCallback((specialty: string) => {
     setFormData((prev) => ({
       ...prev,
       specialties: prev.specialties?.includes(specialty)
         ? prev.specialties.filter((s) => s !== specialty)
         : [...(prev.specialties || []), specialty],
     }));
-  };
+  }, []);
 
-  // Guardar perfil
+  const handleIdentificationChange = useCallback((value: string, isValid: boolean) => {
+    setIdentificationState((prev) => ({
+      ...prev,
+      value,
+      isValid,
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      identification: value,
+      identificationValid: isValid,
+    }));
+  }, []);
+
+  const handleCountryChange = useCallback((country: string) => {
+    const countryCode = country as 'CL' | 'CU' | 'AR' | 'MX' | 'PE' | 'CO' | 'ES';
+
+    setIdentificationState({
+      value: '',
+      isValid: false,
+      country: countryCode,
+    });
+
+    setFormData((prev) => ({
+      ...prev,
+      country: countryCode,
+      identification: '',
+      identificationValid: false,
+    }));
+  }, []);
+
+  // ============================================
+  // GUARDAR PERFIL
+  // ============================================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
+    if (isProvider && formData.identification && !formData.identificationValid) {
+      toast.error('La identificación no es válida. Verifica el formato.');
+      return;
+    }
+
     setSaving(true);
     try {
-      await updateUserProfile(user.uid, formData, firebaseUser || undefined);
+      const updateData: ProfileData = {
+        displayName: formData.displayName,
+        phone: formData.phone,
+        photoURL: formData.photoURL,
+        location: formData.location,
+        specialties: formData.specialties || [],
+        experience: formData.experience || 0,
+        description: formData.description,
+        identification: identificationState.value,
+        legalName: formData.legalName,
+        address: formData.address,
+        country: identificationState.country,
+        identificationValid: identificationState.isValid,
+      };
+
+      await updateUserProfile(user.uid, updateData, firebaseUser || undefined);
       await refreshUser();
       toast.success('✅ Perfil actualizado correctamente');
     } catch (error) {
@@ -119,69 +198,141 @@ export default function ProfilePage() {
     }
   };
 
-  // Solicitar verificación
-  const handleRequestVerification = async () => {
-    if (!user || !isProvider) return;
+  // ============================================
+  // VALIDACIONES PARA VERIFICACIÓN
+  // ============================================
+  const isFormComplete = useCallback(() => {
+    const specialties = formData.specialties || [];
+    const experience = formData.experience || 0;
+    const legalName = formData.legalName || '';
+    const address = formData.address || '';
+    const description = formData.description || '';
+    const location = formData.location || '';
+    const photoURL = formData.photoURL || '';
 
-    // Validar campos requeridos
-    if (!formData.identification || !formData.specialties?.length || !formData.legalName) {
-      toast.error(
-        'Completa todos los campos requeridos (identificación, especialidades, razón social)'
-      );
+    return (
+      formData.displayName.length >= 3 &&
+      formData.phone.length >= 8 &&
+      formData.identificationValid === true &&
+      specialties.length > 0 &&
+      legalName.length >= 3 &&
+      address.length >= 5 &&
+      description.length >= 20 &&
+      location.length >= 3 &&
+      photoURL.length >= 5 &&
+      experience >= 0
+    );
+  }, [formData]);
+
+  const getMissingFields = useCallback(() => {
+    const missing: string[] = [];
+    const specialties = formData.specialties || [];
+    const experience = formData.experience || 0;
+    const legalName = formData.legalName || '';
+    const address = formData.address || '';
+    const description = formData.description || '';
+    const location = formData.location || '';
+    const photoURL = formData.photoURL || '';
+
+    if (formData.displayName.length < 3) missing.push('Nombre completo (mínimo 3 caracteres)');
+    if (formData.phone.length < 8) missing.push('Teléfono (mínimo 8 dígitos)');
+    if (!formData.identificationValid) missing.push('Identificación válida');
+    if (specialties.length === 0) missing.push('Al menos una especialidad');
+    if (legalName.length < 3) missing.push('Razón social (mínimo 3 caracteres)');
+    if (address.length < 5) missing.push('Dirección fiscal (mínimo 5 caracteres)');
+    if (description.length < 20) missing.push('Descripción profesional (mínimo 20 caracteres)');
+    if (location.length < 3) missing.push('Ubicación (mínimo 3 caracteres)');
+    if (photoURL.length < 5) missing.push('Foto de perfil');
+    if (experience < 0) missing.push('Años de experiencia válidos');
+    return missing;
+  }, [formData]);
+
+  // ============================================
+  // SOLICITAR VERIFICACIÓN - CORREGIDA
+  // ============================================
+  const handleRequestVerification = async () => {
+    if (!user || !isProvider) {
+      toast.error('Debes ser un proveedor para solicitar verificación');
+      return;
+    }
+
+    if (!isFormComplete()) {
+      const missing = getMissingFields();
+      toast.error(`⚠️ Completa los siguientes campos:\n${missing.join('\n')}`);
       return;
     }
 
     setRequestingVerification(true);
     try {
+      // ✅ Solo los campos que existen en VerificationRequest
       await requestVerification({
         uid: user.uid,
-        displayName: formData.displayName,
+        displayName: formData.displayName || '',
         email: user.email || '',
-        phone: formData.phone,
-        identification: formData.identification,
-        legalName: formData.legalName,
+        phone: formData.phone || '',
+        identification: formData.identification || '',
+        country: formData.country || 'CL',
+        legalName: formData.legalName || '',
         address: formData.address || '',
         specialties: formData.specialties || [],
         experience: formData.experience || 0,
         description: formData.description || '',
       });
 
-      toast.success('✅ Solicitud de verificación enviada');
-      // Recargar estado de verificación
+      toast.success('✅ Solicitud de verificación enviada correctamente');
       const updated = await getVerificationStatus(user.uid);
       setVerification(updated);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error);
-      toast.error('Error al solicitar verificación');
+      toast.error(error.message || 'Error al solicitar verificación');
     } finally {
       setRequestingVerification(false);
     }
   };
 
-  // Renderizar estado de verificación
-  const renderVerificationStatus = () => {
+  // ============================================
+  // ✅ RENDER VERIFICACIÓN - MOVIDO DENTRO DEL COMPONENTE
+  // ============================================
+  const renderVerificationStatus = useCallback(() => {
     if (!isProvider) return null;
 
-    const statusMap: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
+    const isComplete = isFormComplete();
+    const missingFields = getMissingFields();
+
+    const statusMap: Record<
+      string,
+      {
+        icon: React.ReactNode;
+        label: string;
+        color: string;
+        description: string;
+      }
+    > = {
       not_requested: {
         icon: <Shield className="w-5 h-5 text-gray-400" />,
         label: 'No verificada',
         color: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
+        description: isComplete
+          ? '¡Listo para solicitar verificación!'
+          : 'Completa todos los campos para solicitar verificación',
       },
       pending: {
-        icon: <Clock className="w-5 h-5 text-yellow-500" />,
+        icon: <Clock className="w-5 h-5 text-yellow-500 animate-pulse" />,
         label: 'Verificación pendiente',
         color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+        description: 'Tu solicitud está siendo revisada por nuestro equipo',
       },
       approved: {
         icon: <CheckCircle className="w-5 h-5 text-green-500" />,
         label: 'Verificada ✓',
         color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+        description: '¡Tu cuenta está verificada! Disfruta de todos los beneficios.',
       },
       rejected: {
         icon: <XCircle className="w-5 h-5 text-red-500" />,
         label: 'Rechazada',
         color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+        description: 'Revisa los motivos y vuelve a solicitar',
       },
     };
 
@@ -190,64 +341,130 @@ export default function ProfilePage() {
 
     return (
       <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {info.icon}
             <div>
               <p className="font-medium text-gray-900 dark:text-white">Estado de verificación</p>
-              <span className={`text-sm px-2 py-0.5 rounded-full ${info.color}`}>{info.label}</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-sm px-2 py-0.5 rounded-full ${info.color}`}>
+                  {info.label}
+                </span>
+                {status === 'not_requested' && isComplete && (
+                  <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Todo listo
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{info.description}</p>
             </div>
           </div>
+
+          {/* Botones según estado */}
           {status === 'not_requested' && (
             <button
               onClick={handleRequestVerification}
-              disabled={requestingVerification}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 flex items-center gap-2 text-sm"
+              disabled={requestingVerification || !isComplete}
+              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm whitespace-nowrap ${
+                isComplete
+                  ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm'
+                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+              }`}
+              title={!isComplete ? 'Completa todos los campos requeridos' : ''}
             >
               {requestingVerification ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Enviando...
+                </>
               ) : (
-                <Shield className="w-4 h-4" />
+                <>
+                  <Shield className="w-4 h-4" />
+                  Solicitar verificación
+                </>
               )}
-              Solicitar verificación
             </button>
           )}
+
           {status === 'pending' && (
-            <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400">
+            <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
               <Clock className="w-4 h-4 animate-pulse" />
               <span>En revisión...</span>
             </div>
           )}
+
           {status === 'approved' && (
-            <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+            <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-lg">
               <CheckCircle className="w-4 h-4" />
               <span>¡Cuenta verificada!</span>
             </div>
           )}
+
           {status === 'rejected' && (
             <button
               onClick={handleRequestVerification}
-              disabled={requestingVerification}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 flex items-center gap-2 text-sm"
+              disabled={requestingVerification || !isComplete}
+              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm whitespace-nowrap ${
+                isComplete
+                  ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm'
+                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+              }`}
             >
               {requestingVerification ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Reintentando...
+                </>
               ) : (
-                <Shield className="w-4 h-4" />
+                <>
+                  <Shield className="w-4 h-4" />
+                  Reintentar
+                </>
               )}
-              Reintentar
             </button>
           )}
         </div>
-        {verification?.verificationNotes && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-            Motivo: {verification.verificationNotes}
-          </p>
+
+        {/* Mostrar campos faltantes */}
+        {status === 'not_requested' && !isComplete && (
+          <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              Campos pendientes para solicitar verificación:
+            </p>
+            <ul className="text-xs text-yellow-700 dark:text-yellow-400 space-y-1">
+              {missingFields.map((field, index) => (
+                <li key={index}>• {field}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {verification?.verificationNotes && status === 'rejected' && (
+          <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-800">
+            <p className="text-sm font-medium text-red-800 dark:text-red-300">
+              ❌ Motivo del rechazo:
+            </p>
+            <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+              {verification.verificationNotes}
+            </p>
+          </div>
         )}
       </div>
     );
-  };
+  }, [
+    isProvider,
+    verification,
+    requestingVerification,
+    isFormComplete,
+    getMissingFields,
+    handleRequestVerification,
+  ]);
 
+  // ============================================
+  // RENDER
+  // ============================================
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -342,7 +559,7 @@ export default function ProfilePage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Teléfono
+              Teléfono *
             </label>
             <input
               type="tel"
@@ -358,7 +575,7 @@ export default function ProfilePage() {
         {/* Ubicación */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Ubicación
+            Ubicación *
           </label>
           <div className="relative">
             <MapPin className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
@@ -373,6 +590,33 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* VALIDACIÓN DE IDENTIFICACIÓN */}
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            📋 Identificación
+          </h3>
+
+          <IdentificationValidator
+            value={identificationState.value}
+            onChange={handleIdentificationChange}
+            initialCountry={identificationState.country}
+            label="Número de identificación"
+            required={isProvider}
+          />
+
+          {isProvider && !identificationState.isValid && identificationState.value && (
+            <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+              ⚠️ La identificación debe ser válida para solicitar verificación
+            </p>
+          )}
+
+          {isProvider && identificationState.isValid && (
+            <p className="mt-2 text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+              ✅ Identificación validada correctamente
+            </p>
+          )}
+        </div>
+
         {/* Campos para proveedores */}
         {isProvider && (
           <>
@@ -382,22 +626,6 @@ export default function ProfilePage() {
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Identificación (DNI/NIE/CIF) *
-                  </label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      name="identification"
-                      value={formData.identification}
-                      onChange={handleChange}
-                      placeholder="12345678A"
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Razón social *
@@ -418,7 +646,7 @@ export default function ProfilePage() {
 
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Dirección fiscal
+                  Dirección fiscal *
                 </label>
                 <input
                   type="text"
@@ -433,7 +661,7 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Años de experiencia
+                    Años de experiencia *
                   </label>
                   <input
                     type="number"
@@ -475,7 +703,7 @@ export default function ProfilePage() {
               {/* Descripción */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Descripción profesional
+                  Descripción profesional *
                 </label>
                 <textarea
                   name="description"
@@ -486,14 +714,14 @@ export default function ProfilePage() {
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {formData.description?.length || 0}/500 caracteres
+                  {formData.description?.length || 0}/500 caracteres (mínimo 20)
                 </p>
               </div>
             </div>
           </>
         )}
 
-        {/* Estado de verificación (solo proveedores) */}
+        {/* Estado de verificación */}
         {renderVerificationStatus()}
 
         {/* Botones */}

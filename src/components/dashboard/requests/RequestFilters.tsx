@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  RequestCategory,
-  RequestFilterOptions,
-  RequestStatus,
-  RequestUrgency,
-} from '@/types/request.types';
+import { RequestFilterOptions, RequestStatus, UrgencyLevel } from '@/types/request.types';
 import { Filter, Search, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,6 +10,7 @@ interface RequestFiltersProps {
   onFilterChange: (filters: RequestFilterOptions) => void;
 }
 
+// ✅ Usar los tipos correctos
 const STATUS_OPTIONS: { value: RequestStatus; label: string }[] = [
   { value: 'pendiente', label: 'Pendiente' },
   { value: 'en-progreso', label: 'En progreso' },
@@ -23,18 +19,19 @@ const STATUS_OPTIONS: { value: RequestStatus; label: string }[] = [
   { value: 'rechazado', label: 'Rechazado' },
 ];
 
-const CATEGORY_OPTIONS: RequestCategory[] = [
-  'Construcción',
-  'Albañilería',
-  'Carpintería',
-  'Techos',
-  'Jardinería',
-  'Plomería',
-  'Electricidad',
-  'Pintura',
+// ✅ Categorías con sus IDs
+const CATEGORY_OPTIONS: { value: string; label: string }[] = [
+  { value: 'construction', label: 'Construcción' },
+  { value: 'carpentry', label: 'Carpintería' },
+  { value: 'roofing', label: 'Techos' },
+  { value: 'gardening', label: 'Jardinería' },
+  { value: 'plumbing', label: 'Plomería' },
+  { value: 'electrical', label: 'Electricidad' },
+  { value: 'painting', label: 'Pintura' },
+  { value: 'masonry', label: 'Albañilería' },
 ];
 
-const URGENCY_OPTIONS: { value: RequestUrgency; label: string }[] = [
+const URGENCY_OPTIONS: { value: UrgencyLevel; label: string }[] = [
   { value: 'normal', label: 'Normal' },
   { value: 'urgente', label: 'Urgente' },
   { value: 'muy-urgente', label: 'Muy urgente' },
@@ -59,7 +56,9 @@ export const RequestFilters = ({ role, filters, onFilterChange }: RequestFilters
     onFilterChange({});
   };
 
-  const hasActiveFilters = filters.status || filters.category || filters.urgency || filters.search;
+  // ✅ Usar categoryId en lugar de category
+  const hasActiveFilters =
+    filters.status || filters.categoryId || filters.urgency || filters.search;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
@@ -126,14 +125,14 @@ export const RequestFilters = ({ role, filters, onFilterChange }: RequestFilters
                 Categoría
               </label>
               <select
-                value={filters.category || ''}
-                onChange={(e) => handleFilterChange('category', e.target.value || undefined)}
+                value={filters.categoryId || ''}
+                onChange={(e) => handleFilterChange('categoryId', e.target.value || undefined)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               >
                 <option value="">Todas las categorías</option>
                 {CATEGORY_OPTIONS.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
+                  <option key={category.value} value={category.value}>
+                    {category.label}
                   </option>
                 ))}
               </select>
@@ -171,11 +170,13 @@ export const RequestFilters = ({ role, filters, onFilterChange }: RequestFilters
                   </button>
                 </span>
               )}
-              {filters.category && (
+              {filters.categoryId && (
                 <span className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs rounded-full flex items-center gap-1">
-                  Categoría: {filters.category}
+                  Categoría:{' '}
+                  {CATEGORY_OPTIONS.find((c) => c.value === filters.categoryId)?.label ||
+                    filters.categoryId}
                   <button
-                    onClick={() => handleFilterChange('category', undefined)}
+                    onClick={() => handleFilterChange('categoryId', undefined)}
                     className="hover:text-red-500"
                   >
                     ×

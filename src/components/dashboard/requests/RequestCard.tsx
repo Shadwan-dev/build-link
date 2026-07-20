@@ -1,16 +1,21 @@
 'use client';
 
 import { Request } from '@/types/request.types';
-import { AlertCircle, Calendar, CheckCircle, DollarSign, User, XCircle } from 'lucide-react';
-import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import { es } from 'date-fns/locale/es';
+import { CheckCircle, Clock, DollarSign, MapPin, User, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface RequestCardProps {
   request: Request;
-  role: 'client' | 'provider';
-  onStatusChange?: () => void;
+  onStatusChange?: (id: string, status: 'aceptado' | 'rechazado') => void;
+  showActions?: boolean;
+  // ✅ Eliminar role - no se usa en el componente
 }
 
-export const RequestCard = ({ request, role, onStatusChange }: RequestCardProps) => {
+export const RequestCard = ({ request, onStatusChange, showActions = false }: RequestCardProps) => {
+  const router = useRouter();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pendiente':
@@ -28,100 +33,122 @@ export const RequestCard = ({ request, role, onStatusChange }: RequestCardProps)
     }
   };
 
-  const getUrgencyColor = (urgency: string) => {
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pendiente: 'Pendiente',
+      'en-progreso': 'En progreso',
+      completado: 'Completado',
+      aceptado: 'Aceptado',
+      rechazado: 'Rechazado',
+    };
+    return labels[status] || status;
+  };
+
+  const getUrgencyLabel = (urgency?: string) => {
     switch (urgency) {
       case 'urgente':
-        return 'text-yellow-600 dark:text-yellow-400';
+        return '🟡 Urgente';
       case 'muy-urgente':
-        return 'text-red-600 dark:text-red-400';
+        return '🔴 Muy urgente';
       default:
-        return 'text-gray-500 dark:text-gray-400';
+        return '🟢 Normal';
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pendiente':
-        return 'Pendiente';
-      case 'en-progreso':
-        return 'En progreso';
-      case 'completado':
-        return 'Completado';
-      case 'aceptado':
-        return 'Aceptado';
-      case 'rechazado':
-        return 'Rechazado';
-      default:
-        return status;
-    }
-  };
+  const timeAgo = request.createdAt
+    ? formatDistanceToNow(new Date(request.createdAt.seconds * 1000), {
+        addSuffix: true,
+        locale: es,
+      })
+    : 'Fecha no disponible';
 
-  const getDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+  const handleCardClick = () => {
+    router.push(`/dashboard/requests/${request.id}`);
   };
 
   return (
-    <Link
-      href={`/dashboard/requests/${request.id}`}
-      className="block bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200 hover:border-primary-300 dark:hover:border-primary-700"
+    <div
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all p-4 md:p-6 cursor-pointer"
+      onClick={handleCardClick}
     >
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        {/* Contenido principal */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-              {request.category}
+              {request.categoryName || 'Sin categoría'}
             </h3>
             <span
               className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}
             >
               {getStatusLabel(request.status)}
             </span>
-            <span className={`text-xs flex items-center gap-1 ${getUrgencyColor(request.urgency)}`}>
-              <AlertCircle className="w-3 h-3" />
-              {request.urgency === 'muy-urgente'
-                ? 'Muy urgente'
-                : request.urgency === 'urgente'
-                  ? 'Urgente'
-                  : 'Normal'}
-            </span>
-          </div>
-
-          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
-            {request.description}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
-            <span className="flex items-center gap-1">
-              <User className="w-4 h-4" />
-              {role === 'client' ? request.providerName : request.clientName}
-            </span>
-            {request.budget && (
-              <span className="flex items-center gap-1">
-                <DollarSign className="w-4 h-4" />${request.budget.toLocaleString()}
+            {request.urgency && request.urgency !== 'normal' && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                {getUrgencyLabel(request.urgency)}
               </span>
             )}
-            <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {getDate(request.createdAt)}
-            </span>
           </div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+            {request.description}
+          </p>
         </div>
+        {showActions && request.status === 'pendiente' && onStatusChange && (
+          <div className="flex gap-2 flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStatusChange(request.id, 'aceptado');
+              }}
+              className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm flex items-center gap-1"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Aceptar
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStatusChange(request.id, 'rechazado');
+              }}
+              className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm flex items-center gap-1"
+            >
+              <XCircle className="w-4 h-4" />
+              Rechazar
+            </button>
+          </div>
+        )}
+      </div>
 
-        {/* Estado visual */}
-        <div className="flex items-center gap-2">
-          {request.status === 'aceptado' && <CheckCircle className="w-5 h-5 text-green-500" />}
-          {request.status === 'rechazado' && <XCircle className="w-5 h-5 text-red-500" />}
-          {request.status === 'completado' && <CheckCircle className="w-5 h-5 text-blue-500" />}
-          <span className="text-xs text-gray-400 dark:text-gray-500">
-            {new Date(request.updatedAt).toLocaleDateString()}
-          </span>
+      {/* Detalles */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <User className="w-4 h-4" />
+          <span className="truncate">{request.clientName}</span>
+        </div>
+        {request.budget && (
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <DollarSign className="w-4 h-4" />
+            <span>${request.budget.toLocaleString()}</span>
+          </div>
+        )}
+        {request.location && (
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <MapPin className="w-4 h-4" />
+            <span className="truncate">{request.location}</span>
+          </div>
+        )}
+        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+          <Clock className="w-4 h-4" />
+          <span className="truncate">{timeAgo}</span>
         </div>
       </div>
-    </Link>
+
+      {/* Link a detalle */}
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <span className="text-sm text-primary-600 dark:text-primary-400 flex items-center gap-1">
+          Ver detalles →
+        </span>
+      </div>
+    </div>
   );
 };

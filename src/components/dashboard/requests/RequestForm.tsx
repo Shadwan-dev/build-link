@@ -2,8 +2,8 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORIES } from '@/lib/constants/categories';
-import { createRequest } from '@/lib/firebase/request.service';
-import { RequestCategory } from '@/types/request.types';
+import { createRequest } from '@/lib/firebase/requests.service';
+import { RequestFormData, UrgencyLevel } from '@/types/request.types';
 import {
   AlertCircle,
   Briefcase,
@@ -25,24 +25,32 @@ interface RequestFormProps {
   onSuccess?: () => void;
 }
 
+// ✅ Estado inicial del formulario
+const initialFormData: RequestFormData = {
+  categoryId: '',
+  categoryName: '',
+  description: '',
+  budget: '',
+  location: '',
+  urgency: 'normal',
+  timeline: '',
+  estimatedTime: '',
+  specialtyId: '',
+  specialtyName: '',
+};
+
 export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: RequestFormProps) => {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    category: '' as RequestCategory | '',
-    description: '',
-    budget: '',
-    timeline: '',
-    urgency: 'normal' as 'normal' | 'urgente' | 'muy-urgente',
-  });
+  const [formData, setFormData] = useState<RequestFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.category) {
-      newErrors.category = 'Selecciona una categoría';
+    if (!formData.categoryId) {
+      newErrors.categoryId = 'Selecciona una categoría';
     }
     if (!formData.description.trim()) {
       newErrors.description = 'La descripción es requerida';
@@ -66,6 +74,7 @@ export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: Re
 
     setLoading(true);
     try {
+      // ✅ Usar CreateRequestInput con tipos correctos
       await createRequest({
         clientId: user.uid,
         clientName: user.displayName || 'Usuario',
@@ -73,25 +82,38 @@ export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: Re
         clientPhone: user.phone || '',
         providerId,
         providerName,
-        category: formData.category as RequestCategory,
+        categoryId: formData.categoryId,
+        categoryName: formData.categoryName,
         description: formData.description,
         budget: formData.budget ? parseFloat(formData.budget) : undefined,
-        timeline: formData.timeline || undefined,
+        location: formData.location || undefined,
         urgency: formData.urgency,
+        timeline: formData.timeline || undefined,
+        estimatedTime: formData.estimatedTime || undefined,
+        specialtyId: formData.specialtyId || undefined,
+        specialtyName: formData.specialtyName || undefined,
       });
 
       toast.success('📩 Solicitud enviada correctamente');
       onSuccess?.();
       onClose();
       router.push('/dashboard/requests');
-    } catch (error) {
-      toast.error('Error al enviar la solicitud');
+    } catch (error: any) {
+      console.error('Error al enviar solicitud:', error);
+      toast.error(error.message || 'Error al enviar la solicitud');
     } finally {
       setLoading(false);
     }
   };
 
-  const selectedCategory = CATEGORIES.find((c) => c.label === formData.category);
+  const handleCategoryChange = (categoryId: string) => {
+    const category = CATEGORIES.find((c) => c.id === categoryId);
+    setFormData({
+      ...formData,
+      categoryId,
+      categoryName: category?.label || '',
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
@@ -123,32 +145,30 @@ export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: Re
             </label>
             <div className="relative">
               <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value as RequestCategory })
-                }
+                value={formData.categoryId}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className={`w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white appearance-none ${
-                  errors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  errors.categoryId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
               >
                 <option value="">Selecciona una categoría...</option>
                 {CATEGORIES.map((cat) => (
-                  <option key={cat.id} value={cat.label}>
+                  <option key={cat.id} value={cat.id}>
                     {cat.icon} {cat.label}
                   </option>
                 ))}
               </select>
               <Briefcase className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
             </div>
-            {errors.category && (
+            {errors.categoryId && (
               <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" />
-                {errors.category}
+                {errors.categoryId}
               </p>
             )}
-            {selectedCategory && (
+            {formData.categoryName && (
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {selectedCategory.icon} Has seleccionado: {selectedCategory.label}
+                Has seleccionado: {formData.categoryName}
               </p>
             )}
           </div>
@@ -161,7 +181,7 @@ export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: Re
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder={`Describe detalladamente el trabajo que necesitas realizar...`}
+              placeholder="Describe detalladamente el trabajo que necesitas realizar..."
               rows={5}
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none ${
                 errors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
@@ -189,6 +209,8 @@ export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: Re
                 value={formData.budget}
                 onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
                 placeholder="0"
+                min="0"
+                step="100"
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>
@@ -198,7 +220,9 @@ export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: Re
               </label>
               <select
                 value={formData.urgency}
-                onChange={(e) => setFormData({ ...formData, urgency: e.target.value as any })}
+                onChange={(e) =>
+                  setFormData({ ...formData, urgency: e.target.value as UrgencyLevel })
+                }
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               >
                 <option value="normal">🟢 Normal</option>
@@ -208,30 +232,45 @@ export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: Re
             </div>
           </div>
 
-          {/* Tiempo estimado */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              <Calendar className="w-4 h-4 inline" /> Tiempo estimado
-            </label>
-            <input
-              type="text"
-              value={formData.timeline}
-              onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-              placeholder="Ej: 2 semanas, 1 mes..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-            />
+          {/* Tiempo estimado y Ubicación */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <Calendar className="w-4 h-4 inline" /> Tiempo estimado
+              </label>
+              <input
+                type="text"
+                value={formData.estimatedTime}
+                onChange={(e) => setFormData({ ...formData, estimatedTime: e.target.value })}
+                placeholder="Ej: 2 semanas, 1 mes..."
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                📍 Ubicación
+              </label>
+              <input
+                type="text"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                placeholder="Ej: Centro, Zona Norte..."
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              />
+            </div>
           </div>
 
           {/* Resumen */}
-          {formData.category && (
+          {formData.categoryName && (
             <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4">
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 <span className="font-medium">📋 Resumen:</span> Solicitud de{' '}
-                <span className="font-medium">{formData.category}</span>
+                <span className="font-medium">{formData.categoryName}</span>
                 {formData.budget &&
                   ` · Presupuesto: $${parseFloat(formData.budget).toLocaleString()}`}
                 {formData.urgency !== 'normal' &&
                   ` · ${formData.urgency === 'urgente' ? '🟡 Urgente' : '🔴 Muy urgente'}`}
+                {formData.location && ` · 📍 ${formData.location}`}
               </p>
             </div>
           )}

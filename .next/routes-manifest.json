@@ -134,6 +134,12 @@
       "namedRegex": "^/dashboard/requests(?:/)?$"
     },
     {
+      "page": "/dashboard/requests/new",
+      "regex": "^/dashboard/requests/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/requests/new(?:/)?$"
+    },
+    {
       "page": "/dashboard/settings",
       "regex": "^/dashboard/settings(?:/)?$",
       "routeKeys": {},

@@ -7,6 +7,7 @@ const getDb = (): Firestore => {
   return db;
 };
 
+// ✅ Interface completa con todos los campos
 export interface ProfileData {
   displayName: string;
   phone: string;
@@ -17,11 +18,16 @@ export interface ProfileData {
   experience?: number;
   description?: string;
   identification?: string;
-  legalName?: string; // ✅ Añadir legalName
-  address?: string; // ✅ Añadir address
+  legalName?: string;
+  address?: string;
+  // ✅ AÑADIR estos campos para la validación
+  country?: string;
+  identificationValid?: boolean;
+  verificationStatus?: 'not_requested' | 'pending' | 'approved' | 'rejected';
+  verificationNotes?: string;
 }
 
-// ✅ Obtener perfil de usuario
+// ✅ Obtener perfil de usuario - CON TODOS LOS CAMPOS
 export const getUserProfile = async (uid: string): Promise<any> => {
   try {
     const dbInstance = getDb();
@@ -29,7 +35,16 @@ export const getUserProfile = async (uid: string): Promise<any> => {
     const snapshot = await getDoc(docRef);
 
     if (snapshot.exists()) {
-      return { uid, ...snapshot.data() };
+      const data = snapshot.data();
+      return {
+        uid,
+        ...data,
+        // ✅ Asegurar que los campos de validación existen
+        country: data.country || 'CL',
+        identificationValid: data.identificationValid || false,
+        verificationStatus: data.verificationStatus || 'not_requested',
+        verificationNotes: data.verificationNotes || '',
+      };
     }
     return null;
   } catch (error) {
@@ -38,7 +53,7 @@ export const getUserProfile = async (uid: string): Promise<any> => {
   }
 };
 
-// ✅ Actualizar perfil de usuario
+// ✅ Actualizar perfil de usuario - CON TODOS LOS CAMPOS
 export const updateUserProfile = async (
   uid: string,
   data: ProfileData,
@@ -48,18 +63,45 @@ export const updateUserProfile = async (
     const dbInstance = getDb();
     const docRef = doc(dbInstance, 'users', uid);
 
-    // ✅ Actualizar en Firestore
-    await updateDoc(docRef, {
-      ...data,
+    // ✅ Preparar datos para Firestore
+    const updateData: any = {
+      displayName: data.displayName,
+      phone: data.phone || '',
+      photoURL: data.photoURL || '',
+      location: data.location || '',
+      specialties: data.specialties || [],
+      experience: data.experience || 0,
+      description: data.description || '',
+      identification: data.identification || '',
+      legalName: data.legalName || '',
+      address: data.address || '',
+      // ✅ Incluir campos de validación
+      country: data.country || 'CL',
+      identificationValid: data.identificationValid || false,
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    // ✅ Si tiene verificationStatus, actualizarlo
+    if (data.verificationStatus) {
+      updateData.verificationStatus = data.verificationStatus;
+    }
+    if (data.verificationNotes) {
+      updateData.verificationNotes = data.verificationNotes;
+    }
+
+    // ✅ Actualizar en Firestore
+    await updateDoc(docRef, updateData);
 
     // ✅ Si hay authUser, actualizar displayName en Authentication
     if (authUser && data.displayName) {
-      await updateProfile(authUser, {
-        displayName: data.displayName,
-        photoURL: data.photoURL || null,
-      });
+      try {
+        await updateProfile(authUser, {
+          displayName: data.displayName,
+          photoURL: data.photoURL || null,
+        });
+      } catch (authError) {
+        console.warn('Error actualizando perfil en Auth:', authError);
+      }
     }
 
     // ✅ Si es proveedor, actualizar también en providers
@@ -70,19 +112,23 @@ export const updateUserProfile = async (
         const providerRef = doc(dbInstance, 'providers', uid);
         await updateDoc(providerRef, {
           displayName: data.displayName,
-          phone: data.phone,
+          phone: data.phone || '',
           photoURL: data.photoURL || '',
           location: data.location || '',
           specialties: data.specialties || [],
           experience: data.experience || 0,
           description: data.description || '',
           identification: data.identification || '',
-          legalName: data.legalName || '', // ✅ Añadir
-          address: data.address || '', // ✅ Añadir
+          legalName: data.legalName || '',
+          address: data.address || '',
+          country: data.country || 'CL',
+          identificationValid: data.identificationValid || false,
           updatedAt: serverTimestamp(),
         });
       }
     }
+
+    console.log('✅ Perfil actualizado correctamente');
   } catch (error) {
     console.error('Error actualizando perfil:', error);
     throw new Error('Error al actualizar el perfil');

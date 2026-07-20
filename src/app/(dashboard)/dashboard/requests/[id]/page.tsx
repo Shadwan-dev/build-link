@@ -3,12 +3,11 @@
 import { RequestForm } from '@/components/dashboard/requests/RequestForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
-import { getRequestById, updateRequestStatus } from '@/lib/firebase/request.service';
+import { getRequestById, updateRequestStatus } from '@/lib/firebase/requests.service';
 import { Request } from '@/types/request.types';
 import {
   AlertCircle,
   ArrowLeft,
-  Calendar,
   CheckCircle,
   Clock,
   DollarSign,
@@ -159,6 +158,10 @@ export default function RequestDetailPage() {
     );
   }
 
+  // Determinar si el usuario actual es el cliente de esta solicitud
+  const isClient = user?.uid === request.clientId;
+  const isProvider = user?.uid === request.providerId;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Botón volver */}
@@ -178,20 +181,24 @@ export default function RequestDetailPage() {
             <div>
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {request.category}
+                  {request.categoryName || 'Sin categoría'}
                 </h1>
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}
                 >
                   {getStatusLabel(request.status)}
                 </span>
-                <span className="text-sm flex items-center gap-1 text-gray-500 dark:text-gray-400">
-                  <AlertCircle className="w-4 h-4" />
-                  {getUrgencyLabel(request.urgency)}
-                </span>
+                {request.urgency && (
+                  <span className="text-sm flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                    <AlertCircle className="w-4 h-4" />
+                    {getUrgencyLabel(request.urgency)}
+                  </span>
+                )}
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {new Date(request.createdAt).toLocaleString()}
+                {request.createdAt
+                  ? new Date(request.createdAt.seconds * 1000).toLocaleString()
+                  : 'Fecha no disponible'}
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm">
@@ -206,20 +213,22 @@ export default function RequestDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                {currentRole === 'client' ? 'Proveedor' : 'Cliente'}
+                {isClient ? 'Proveedor' : 'Cliente'}
               </p>
               <div className="mt-2 space-y-2">
                 <p className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
                   <User className="w-4 h-4 text-gray-400" />
-                  {currentRole === 'client' ? request.providerName : request.clientName}
+                  {isClient ? request.providerName : request.clientName}
                 </p>
                 <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Mail className="w-4 h-4 text-gray-400" />
-                  {currentRole === 'client' ? 'proveedor@email.com' : request.clientEmail}
+                  {isClient
+                    ? 'proveedor@email.com'
+                    : (request as any).clientEmail || 'cliente@email.com'}
                 </p>
                 <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Phone className="w-4 h-4 text-gray-400" />
-                  {currentRole === 'client' ? '+34 600 000 000' : request.clientPhone}
+                  {isClient ? '+34 600 000 000' : (request as any).clientPhone || '+34 600 000 000'}
                 </p>
               </div>
             </div>
@@ -235,16 +244,18 @@ export default function RequestDetailPage() {
                     {request.budget.toLocaleString()}
                   </p>
                 )}
-                {request.timeline && (
+                {request.location && (
                   <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    {request.timeline}
+                    <AlertCircle className="w-4 h-4 text-gray-400" />
+                    {request.location}
                   </p>
                 )}
-                <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  {getUrgencyLabel(request.urgency)}
-                </p>
+                {request.urgency && (
+                  <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    {getUrgencyLabel(request.urgency)}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -260,23 +271,23 @@ export default function RequestDetailPage() {
           </div>
 
           {/* Respuesta del proveedor */}
-          {request.response && (
+          {(request as any).response && (
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Respuesta del proveedor
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">{request.response}</p>
-              {request.whatsappContact && (
+              <p className="text-gray-600 dark:text-gray-400">{(request as any).response}</p>
+              {(request as any).whatsappContact && (
                 <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
                   <Phone className="w-4 h-4" />
-                  Contacto: {request.whatsappContact}
+                  Contacto: {(request as any).whatsappContact}
                 </p>
               )}
             </div>
           )}
 
           {/* Acciones para proveedor */}
-          {currentRole === 'provider' && request.status === 'pendiente' && (
+          {isProvider && request.status === 'pendiente' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
                 Responder a la solicitud
@@ -327,13 +338,13 @@ export default function RequestDetailPage() {
           )}
 
           {/* Estado para cliente */}
-          {currentRole === 'client' && request.status !== 'pendiente' && (
+          {isClient && request.status !== 'pendiente' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <p
-                  className={`font-medium ${request.status === 'aceptado' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                  className={`font-medium ${request.status === 'aceptado' || request.status === 'completado' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
                 >
-                  {request.status === 'aceptado' ? (
+                  {request.status === 'aceptado' || request.status === 'completado' ? (
                     <>✅ El proveedor ha aceptado tu solicitud</>
                   ) : request.status === 'rechazado' ? (
                     <>❌ El proveedor ha rechazado tu solicitud</>
@@ -341,15 +352,15 @@ export default function RequestDetailPage() {
                     <>📋 Tu solicitud está en proceso</>
                   )}
                 </p>
-                {request.response && (
+                {(request as any).response && (
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                    <span className="font-medium">Respuesta:</span> {request.response}
+                    <span className="font-medium">Respuesta:</span> {(request as any).response}
                   </p>
                 )}
-                {request.whatsappContact && (
+                {(request as any).whatsappContact && (
                   <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
                     <Phone className="w-4 h-4" />
-                    Contacto del proveedor: {request.whatsappContact}
+                    Contacto del proveedor: {(request as any).whatsappContact}
                   </p>
                 )}
               </div>
@@ -357,10 +368,10 @@ export default function RequestDetailPage() {
           )}
 
           {/* Botón de contacto (si está aceptado) */}
-          {request.status === 'aceptado' && request.whatsappContact && (
+          {request.status === 'aceptado' && (request as any).whatsappContact && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <a
-                href={`https://wa.me/${request.whatsappContact.replace(/\s/g, '').replace('+', '')}`}
+                href={`https://wa.me/${(request as any).whatsappContact.replace(/\s/g, '').replace('+', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
@@ -371,8 +382,8 @@ export default function RequestDetailPage() {
             </div>
           )}
 
-          {/* ✅ Botón para abrir RequestForm (si es cliente) */}
-          {currentRole === 'client' && (
+          {/* Botón para crear nueva solicitud */}
+          {isClient && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <button
                 onClick={() => setShowRequestForm(true)}
@@ -386,7 +397,7 @@ export default function RequestDetailPage() {
         </div>
       </div>
 
-      {/* ✅ Modal del formulario de solicitud */}
+      {/* Modal del formulario de solicitud */}
       {showRequestForm && request && (
         <RequestForm
           providerId={request.providerId}
