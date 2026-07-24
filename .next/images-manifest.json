@@ -12,6 +12,7 @@
       3840
     ],
     "imageSizes": [
+      16,
       32,
       48,
       64,
@@ -27,6 +28,7 @@
     "disableStaticImages": false,
     "minimumCacheTTL": 14400,
     "formats": [
+      "image/avif",
       "image/webp"
     ],
     "maximumRedirects": 3,
@@ -60,6 +62,7 @@
       1920,
       2048,
       3840,
+      16,
       32,
       48,
       64,

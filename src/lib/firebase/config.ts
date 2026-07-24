@@ -13,31 +13,38 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// ✅ Inicializar app (evita duplicados en SSR)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
+// ✅ Servicios (solo en cliente)
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let functions: Functions | null = null;
 
 if (typeof window !== 'undefined') {
   try {
-    // ✅ Auth - Persistencia básica
+    // ✅ Auth - Persistencia local
     auth = getAuth(app);
     setPersistence(auth, browserLocalPersistence)
       .then(() => console.log('✅ Persistencia de Auth configurada'))
       .catch((error) => console.warn('⚠️ Error setting auth persistence:', error));
 
-    // ✅ Firestore - CONFIGURACIÓN MÁS SIMPLE POSIBLE
-    // Sin persistencia offline para evitar errores de caché
+    // ✅ Firestore - Configuración simple y estable
+    // getFirestore es suficiente para producción, sin persistencia offline
     db = getFirestore(app);
 
+    // ✅ Functions
     functions = getFunctions(app);
 
-    console.log('✅ Firebase inicializado correctamente');
-    console.log('📡 Modo: Online (sin persistencia offline)');
+    // ✅ Solo log en desarrollo, no en producción
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Firebase inicializado correctamente');
+      console.log('📡 Modo: Online');
+    }
   } catch (error) {
     console.error('❌ Error inicializando Firebase:', error);
   }
 }
 
+// ✅ Exportaciones
 export { app, auth, db, functions };

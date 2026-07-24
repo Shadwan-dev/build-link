@@ -8,9 +8,9 @@ import { useRouter } from 'next/navigation';
 
 interface RequestCardProps {
   request: Request;
+  role?: 'client' | 'provider';
   onStatusChange?: (id: string, status: 'aceptado' | 'rechazado') => void;
   showActions?: boolean;
-  // ✅ Eliminar role - no se usa en el componente
 }
 
 export const RequestCard = ({ request, onStatusChange, showActions = false }: RequestCardProps) => {
@@ -152,3 +152,5 @@ export const RequestCard = ({ request, onStatusChange, showActions = false }: Re
     </div>
   );
 };
+
+RequestCard.displayName = 'RequestCard';

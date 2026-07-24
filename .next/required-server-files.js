@@ -34,6 +34,7 @@ self.__SERVER_FILES_MANIFEST={
         3840
       ],
       "imageSizes": [
+        16,
         32,
         48,
         64,
@@ -49,6 +50,7 @@ self.__SERVER_FILES_MANIFEST={
       "disableStaticImages": false,
       "minimumCacheTTL": 14400,
       "formats": [
+        "image/avif",
         "image/webp"
       ],
       "maximumRedirects": 3,
@@ -93,9 +95,12 @@ self.__SERVER_FILES_MANIFEST={
       "keepAlive": true
     },
     "logging": {},
-    "compiler": {},
+    "compiler": {
+      "removeConsole": true
+    },
     "expireTime": 31536000,
     "staticPageGenerationTimeout": 60,
+    "output": "standalone",
     "modularizeImports": {
       "@mui/icons-material": {
         "transform": "@mui/icons-material/{{member}}"
@@ -170,7 +175,7 @@ self.__SERVER_FILES_MANIFEST={
       "imgOptSkipMetadata": null,
       "isrFlushToDisk": true,
       "workerThreads": false,
-      "optimizeCss": false,
+      "optimizeCss": true,
       "nextScriptWorkers": false,
       "scrollRestoration": false,
       "externalDir": false,
@@ -215,7 +220,9 @@ self.__SERVER_FILES_MANIFEST={
       "turbopackInferModuleSideEffects": false,
       "optimizePackageImports": [
         "lucide-react",
+        "firebase",
         "date-fns",
+        "framer-motion",
         "lodash-es",
         "ramda",
         "antd",
@@ -318,7 +325,8 @@ self.__SERVER_FILES_MANIFEST={
     ".next\\BUILD_ID",
     ".next\\server\\next-font-manifest.js",
     ".next\\server\\next-font-manifest.json",
-    ".next\\required-server-files.json"
+    ".next\\required-server-files.json",
+    ".next\\static\\chunks\\8f24809860267656.css"
   ],
   "ignore": []
 }

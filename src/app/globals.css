@@ -3,26 +3,25 @@
 @tailwind utilities;
 
 /* ============================================
-   ESTILOS BASE
+   ✅ BASE - Optimizado
    ============================================ */
 @layer base {
-  /* Reset y estilos base con soporte para modo oscuro */
   * {
     @apply border-gray-200 dark:border-gray-700;
   }
 
   html {
     @apply scroll-smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased transition-colors duration-300;
+    @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased;
     font-feature-settings:
       'rlig' 1,
       'calt' 1;
   }
 
-  /* Mejora de tipografía */
   h1,
   h2,
   h3,
@@ -32,12 +31,7 @@
     @apply tracking-tight;
   }
 
-  /* Enlaces */
-  a {
-    @apply transition-colors duration-200;
-  }
-
-  /* Inputs y selects en modo oscuro */
+  /* ✅ Inputs optimizados */
   input,
   select,
   textarea {
@@ -47,117 +41,132 @@
   input:focus,
   select:focus,
   textarea:focus {
-    @apply ring-2 ring-primary-500 border-transparent;
+    @apply ring-2 ring-primary-500 border-transparent outline-none;
+  }
+
+  /* ✅ Enlaces */
+  a {
+    @apply transition-colors duration-200;
   }
 }
 
 /* ============================================
-   UTILIDADES PERSONALIZADAS
+   ✅ UTILIDADES - Optimizado
    ============================================ */
 @layer utilities {
-  /* Animaciones */
+  /* ✅ Animaciones optimizadas */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-in-out;
   }
-
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
   }
-
   .animate-scale-in {
     animation: scaleIn 0.4s ease-out;
   }
-
   .animate-pulse-slow {
     animation: pulseSlow 3s ease-in-out infinite;
   }
 
-  .animate-bounce-slow {
-    animation: bounceSlow 2s ease-in-out infinite;
-  }
-
-  /* Efectos de texto */
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .text-shadow-lg {
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-
-  .text-shadow-white {
-    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
-  }
-
-  /* Efectos de fondo */
-  .bg-gradient-radial {
-    background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
-  }
-
-  .bg-gradient-radial-light {
-    background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.1) 100%);
-  }
-
-  /* Glassmorphism */
+  /* ✅ Glassmorphism optimizado */
   .glass {
     @apply bg-white/20 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30;
   }
-
   .glass-dark {
     @apply bg-gray-900/40 backdrop-blur-xl border border-gray-700/30;
   }
-
   .glass-light {
     @apply bg-white/30 backdrop-blur-xl border border-white/20;
   }
 
-  /* Efectos de brillo para el logo */
+  /* ✅ Logo glow optimizado */
   .logo-glow {
     filter: drop-shadow(0 0 20px rgba(37, 99, 235, 0.15));
-  }
-
-  .logo-glow:hover {
-    filter: drop-shadow(0 0 30px rgba(37, 99, 235, 0.25));
     transition: filter 0.3s ease;
   }
+  .logo-glow:hover {
+    filter: drop-shadow(0 0 30px rgba(37, 99, 235, 0.25));
+  }
 
-  /* Scrollbar personalizada - modo oscuro incluido */
+  /* ✅ Scrollbar optimizada */
   .scrollbar-custom {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
   }
-
   .scrollbar-custom::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
-
   .scrollbar-custom::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
-    border-radius: 10px;
+    @apply bg-gray-100 dark:bg-gray-800 rounded-[10px];
   }
-
   .scrollbar-custom::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-600;
-    border-radius: 10px;
+    @apply bg-gray-300 dark:bg-gray-600 rounded-[10px];
   }
-
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-400 dark:bg-gray-500;
   }
 
-  /* Gradientes para modo oscuro */
-  .bg-gradient-dark {
-    @apply bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900;
-  }
-
+  /* ✅ Gradientes optimizados */
   .bg-gradient-primary {
     @apply bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-500 dark:to-primary-600;
+  }
+
+  /* ✅ Responsive helpers */
+  .hide-mobile {
+    @apply hidden sm:block;
+  }
+  .show-mobile {
+    @apply block sm:hidden;
+  }
+  .hide-tablet {
+    @apply hidden md:block;
+  }
+  .show-tablet {
+    @apply block md:hidden;
   }
 }
 
 /* ============================================
-   ANIMACIONES
+   ✅ COMPONENTES - Optimizado
+   ============================================ */
+@layer components {
+  /* ✅ Cards optimizadas */
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200;
+  }
+  .card:hover {
+    @apply shadow-md dark:shadow-gray-900/50;
+  }
+
+  .card-glass {
+    @apply bg-white/20 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-xl shadow-lg;
+  }
+
+  /* ✅ Botones optimizados */
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors duration-200;
+  }
+  .btn-outline {
+    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white dark:border-primary-400 dark:text-primary-400 dark:hover:bg-primary-400 dark:hover:text-gray-900 transition-colors duration-200;
+  }
+
+  /* ✅ Skeleton loader */
+  .skeleton {
+    @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
+  }
+
+  /* ✅ Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
+  }
+}
+
+/* ============================================
+   ✅ ANIMACIONES - Optimizado
    ============================================ */
 @keyframes fadeIn {
   from {
@@ -202,164 +211,72 @@
   }
 }
 
-@keyframes bounceSlow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
 /* ============================================
-   SCROLLBAR GLOBAL
+   ✅ SCROLLBAR GLOBAL - Optimizado
    ============================================ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
-  border-radius: 10px;
+  @apply bg-gray-100 dark:bg-gray-800 rounded-[10px];
 }
-
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-600;
-  border-radius: 10px;
+  @apply bg-gray-300 dark:bg-gray-600 rounded-[10px];
 }
-
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-400 dark:bg-gray-500;
 }
 
 /* ============================================
-   SELECTION
+   ✅ SELECTION & FOCUS - Optimizado
    ============================================ */
 ::selection {
   @apply bg-primary-500 text-white;
 }
 
-/* ============================================
-   FOCUS VISIBLE (Accesibilidad)
-   ============================================ */
 :focus-visible {
   @apply outline-none ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-900;
 }
 
 /* ============================================
-   MODAL / OVERLAY
-   ============================================ */
-.modal-overlay {
-  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
-}
-
-/* ============================================
-   SKELETON LOADER
-   ============================================ */
-.skeleton {
-  @apply bg-gray-200 dark:bg-gray-700 animate-pulse rounded;
-}
-
-/* ============================================
-   TARJETAS / CARDS
-   ============================================ */
-.card {
-  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200;
-}
-
-.card:hover {
-  @apply shadow-md dark:shadow-gray-900/50;
-}
-
-.card-glass {
-  @apply bg-white/20 dark:bg-gray-900/20 backdrop-blur-xl border border-white/20 dark:border-gray-700/30 rounded-xl shadow-lg;
-}
-
-/* ============================================
-   BOTONES CON SOPORTE OSCURO
-   ============================================ */
-.btn-primary {
-  @apply bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 transition-colors duration-200;
-}
-
-.btn-secondary {
-  @apply bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors duration-200;
-}
-
-.btn-outline {
-  @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white dark:border-primary-400 dark:text-primary-400 dark:hover:bg-primary-400 dark:hover:text-gray-900 transition-colors duration-200;
-}
-
-/* ============================================
-   RESPONSIVE BREAKPOINTS HELPERS
-   ============================================ */
-@layer utilities {
-  /* Ocultar en móvil */
-  .hide-mobile {
-    @apply hidden sm:block;
-  }
-
-  /* Mostrar solo en móvil */
-  .show-mobile {
-    @apply block sm:hidden;
-  }
-
-  /* Ocultar en tablet */
-  .hide-tablet {
-    @apply hidden md:block;
-  }
-
-  /* Mostrar solo en tablet */
-  .show-tablet {
-    @apply block md:hidden;
-  }
-}
-
-/* ============================================
-   DARK MODE - AJUSTES ADICIONALES
+   ✅ DARK MODE - Optimizado
    ============================================ */
 @layer base {
-  /* Mejorar contraste en modo oscuro */
   .dark {
     color-scheme: dark;
   }
 
-  /* Input autofill en modo oscuro */
+  /* ✅ Input autofill en modo oscuro */
   .dark input:-webkit-autofill {
     -webkit-box-shadow: 0 0 0 30px rgb(31 41 55) inset !important;
     -webkit-text-fill-color: #fff !important;
   }
 
-  /* Placeholder en modo oscuro */
+  /* ✅ Placeholder en modo oscuro */
   .dark input::placeholder,
   .dark textarea::placeholder {
     @apply text-gray-500;
   }
 
-  /* Select en modo oscuro */
+  /* ✅ Select en modo oscuro */
   .dark select {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 0.5rem center;
     background-repeat: no-repeat;
     background-size: 1.5em 1.5em;
     padding-right: 2.5rem;
-    -webkit-appearance: none;
-    -moz-appearance: none;
     appearance: none;
   }
-
   .dark select option {
     @apply bg-gray-800 text-white;
   }
 
-  /* Checkbox y radio en modo oscuro */
+  /* ✅ Checkbox y radio en modo oscuro */
   .dark input[type='checkbox'],
   .dark input[type='radio'] {
     @apply bg-gray-700 border-gray-600;
   }
-
   .dark input[type='checkbox']:checked,
   .dark input[type='radio']:checked {
     @apply bg-primary-500 border-primary-500;
@@ -367,18 +284,13 @@
 }
 
 /* ============================================
-   IMPRESIÓN
+   ✅ PRINT - Optimizado
    ============================================ */
 @media print {
   .no-print {
     display: none !important;
   }
-
   body {
-    @apply bg-white text-black;
-  }
-
-  .dark body {
     @apply bg-white text-black;
   }
 }
