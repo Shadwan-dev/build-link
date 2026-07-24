@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import {
   Firestore,
   collection,
@@ -88,9 +89,9 @@ export const requestVerification = async (data: VerificationRequest): Promise<vo
       `/admin/verifications/${data.uid}`
     );
 
-    console.log('✅ Solicitud de verificación enviada para:', data.uid);
+    log.info('✅ Solicitud de verificación enviada para:', data.uid);
   } catch (error) {
-    console.error('Error solicitando verificación:', error);
+    log.error('Error solicitando verificación:', error);
     throw new Error('Error al solicitar verificación');
   }
 };
@@ -107,7 +108,7 @@ export const getVerificationStatus = async (uid: string): Promise<ProviderVerifi
     }
     return null;
   } catch (error) {
-    console.error('Error obteniendo verificación:', error);
+    log.error('Error obteniendo verificación:', error);
     return null;
   }
 };
@@ -152,7 +153,7 @@ export const approveVerification = async (uid: string): Promise<void> => {
       );
     }
   } catch (error) {
-    console.error('Error aprobando verificación:', error);
+    log.error('Error aprobando verificación:', error);
     throw new Error('Error al aprobar verificación');
   }
 };
@@ -186,7 +187,7 @@ export const rejectVerification = async (uid: string, reason: string): Promise<v
       '/dashboard/profile'
     );
   } catch (error) {
-    console.error('Error rechazando verificación:', error);
+    log.error('Error rechazando verificación:', error);
     throw new Error('Error al rechazar verificación');
   }
 };
@@ -205,7 +206,7 @@ export const getVerifiedProviders = async (): Promise<ProviderVerification[]> =>
     });
     return providers;
   } catch (error) {
-    console.error('Error obteniendo proveedores verificados:', error);
+    log.error('Error obteniendo proveedores verificados:', error);
     return [];
   }
 };
@@ -224,7 +225,7 @@ export const getPendingVerifications = async (): Promise<ProviderVerification[]>
     });
     return pending;
   } catch (error) {
-    console.error('Error obteniendo solicitudes pendientes:', error);
+    log.error('Error obteniendo solicitudes pendientes:', error);
     return [];
   }
 };

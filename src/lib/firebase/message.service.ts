@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { MessageForm, ProviderVerification } from '@/types/message.types';
 import {
   collection,
@@ -40,7 +41,7 @@ export const sendMessageForm = async (
     await setDoc(docRef, messageData);
     return docRef.id;
   } catch (error) {
-    console.error('Error enviando mensaje:', error);
+    log.error('Error enviando mensaje:', error);
     throw new Error('Error al enviar el mensaje');
   }
 };
@@ -73,7 +74,7 @@ export const sendMessageFormWithNotification = async (
 
     return messageId;
   } catch (error) {
-    console.error('Error enviando mensaje con notificación:', error);
+    log.error('Error enviando mensaje con notificación:', error);
     throw new Error('Error al enviar el mensaje');
   }
 };
@@ -92,7 +93,7 @@ export const getClientMessages = async (clientId: string): Promise<MessageForm[]
     });
     return messages;
   } catch (error) {
-    console.error('Error obteniendo mensajes:', error);
+    log.error('Error obteniendo mensajes:', error);
     return [];
   }
 };
@@ -115,7 +116,7 @@ export const getProviderMessages = async (providerId: string): Promise<MessageFo
     });
     return messages;
   } catch (error) {
-    console.error('Error obteniendo mensajes:', error);
+    log.error('Error obteniendo mensajes:', error);
     return [];
   }
 };
@@ -138,7 +139,7 @@ export const respondToMessage = async (
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error respondiendo mensaje:', error);
+    log.error('Error respondiendo mensaje:', error);
     throw new Error('Error al responder el mensaje');
   }
 };
@@ -157,7 +158,7 @@ export const getProviderVerification = async (
     }
     return null;
   } catch (error) {
-    console.error('Error obteniendo verificación:', error);
+    log.error('Error obteniendo verificación:', error);
     return null;
   }
 };
@@ -176,7 +177,7 @@ export const requestProviderVerification = async (
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error solicitando verificación:', error);
+    log.error('Error solicitando verificación:', error);
     throw new Error('Error al solicitar verificación');
   }
 };

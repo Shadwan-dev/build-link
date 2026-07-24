@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
 import { useAuth } from '@/contexts/AuthContext';

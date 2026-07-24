@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
+import { log } from '@/lib/utils/logger';
 import { Briefcase, Check, RefreshCw, User } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -21,7 +22,8 @@ export const RoleSwitcher = () => {
       toast.success(`✅ Cambiado a modo ${newRole}`);
     } catch (error) {
       toast.error('❌ Error al cambiar de rol');
-      console.error(error);
+      // ✅ Convertir error a string antes de pasar a log.error
+      log.error(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
       setIsSwitching(false);
     }

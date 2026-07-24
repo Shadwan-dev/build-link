@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { BackgroundCarousel } from '@/components/common/BackgroundCarousel';
 import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';

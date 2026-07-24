@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { ClientDashboard } from '@/components/dashboard/client/ClientDashboard';
 import { ProviderDashboard } from '@/components/dashboard/providers/ProviderDashboard';

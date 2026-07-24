@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { MessageFormModal } from '@/components/dashboard/client/MessageFormModal';
 import { Provider, getProviderById } from '@/lib/firebase/provider.service';
@@ -44,7 +45,7 @@ export default function ProviderDetailPage() {
           setError('Proveedor no encontrado');
         }
       } catch (err) {
-        console.error('Error cargando proveedor:', err);
+        log.error('Error cargando proveedor:', err);
         setError('Error al cargar el proveedor');
       } finally {
         setLoading(false);

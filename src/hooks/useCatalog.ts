@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import {
   getAllCategories,
@@ -42,7 +43,7 @@ export const useCatalog = (): UseCatalogReturn => {
       const fullCatalog = await getFullCatalog();
       setCatalog(fullCatalog);
     } catch (err) {
-      console.error('Error cargando catálogo:', err);
+      log.error('Error cargando catálogo:', err);
       setError('Error al cargar el catálogo de servicios');
     } finally {
       setLoading(false);

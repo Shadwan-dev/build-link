@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { JobCard } from '@/components/dashboard/jobs/JobCard';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,7 +38,7 @@ export default function JobsPage() {
         completed: data.filter((j) => j.status === 'completed').length,
       });
     } catch (error) {
-      console.error('Error cargando ofertas:', error);
+      log.error('Error cargando ofertas:', error);
       toast.error('Error al cargar las ofertas');
     } finally {
       setLoading(false);

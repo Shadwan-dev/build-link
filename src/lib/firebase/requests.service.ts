@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import {
   CreateRequestInput,
   Request,
@@ -93,7 +94,7 @@ const mapRequestsFromSnapshot = (snapshot: any): Request[] => {
 // ============================================
 export const createRequest = async (data: CreateRequestInput): Promise<string> => {
   try {
-    console.log('📝 Datos recibidos en createRequest:', data);
+    log.info('📝 Datos recibidos en createRequest:', data);
 
     // ✅ Validar datos requeridos
     if (!data.clientId) throw new Error('El ID del cliente es requerido');
@@ -111,7 +112,7 @@ export const createRequest = async (data: CreateRequestInput): Promise<string> =
     try {
       const userDoc = await getDoc(doc(dbInstance, 'users', data.clientId));
       if (!userDoc.exists()) {
-        console.warn('⚠️ Usuario no encontrado en Firestore, pero continuamos...');
+        log.warning('⚠️ Usuario no encontrado en Firestore, pero continuamos...');
       } else {
         const userData = userDoc.data();
         if (userData.role !== 'client') {
@@ -119,7 +120,7 @@ export const createRequest = async (data: CreateRequestInput): Promise<string> =
         }
       }
     } catch (userError) {
-      console.warn('⚠️ Error verificando usuario:', userError);
+      log.warning('⚠️ Error verificando usuario:', userError);
       // No bloqueamos la creación si hay error de lectura
     }
 
@@ -127,10 +128,10 @@ export const createRequest = async (data: CreateRequestInput): Promise<string> =
     try {
       const providerDoc = await getDoc(doc(dbInstance, 'providers', data.providerId));
       if (!providerDoc.exists()) {
-        console.warn('⚠️ Proveedor no encontrado en Firestore, pero continuamos...');
+        log.warning('⚠️ Proveedor no encontrado en Firestore, pero continuamos...');
       }
     } catch (providerError) {
-      console.warn('⚠️ Error verificando proveedor:', providerError);
+      log.warning('⚠️ Error verificando proveedor:', providerError);
       // No bloqueamos la creación si hay error de lectura
     }
 
@@ -169,11 +170,11 @@ export const createRequest = async (data: CreateRequestInput): Promise<string> =
       clientFeedback: null,
     };
 
-    console.log('📝 Guardando solicitud en Firestore:', requestData);
+    log.info('📝 Guardando solicitud en Firestore:', requestData);
 
     // ✅ Guardar en Firestore
     await setDoc(docRef, requestData);
-    console.log(`✅ Solicitud creada: ${docRef.id}`);
+    log.info(`✅ Solicitud creada: ${docRef.id}`);
 
     // ✅ Crear notificaciones (solo si la función existe)
     try {
@@ -196,13 +197,13 @@ export const createRequest = async (data: CreateRequestInput): Promise<string> =
         ),
       ]);
     } catch (notifError) {
-      console.warn('⚠️ Error creando notificaciones (no bloqueante):', notifError);
+      log.warning('⚠️ Error creando notificaciones (no bloqueante):', notifError);
       // No bloqueamos la creación si fallan las notificaciones
     }
 
     return docRef.id;
   } catch (error) {
-    console.error('❌ Error creando solicitud:', error);
+    log.error('❌ Error creando solicitud:', error);
     throw new Error(error instanceof Error ? error.message : 'Error al enviar la solicitud');
   }
 };
@@ -230,7 +231,7 @@ export const getRequestsByCategory = async (
 
     return mapRequestsFromSnapshot(snapshot);
   } catch (error) {
-    console.error('❌ Error obteniendo solicitudes por categoría:', error);
+    log.error('❌ Error obteniendo solicitudes por categoría:', error);
     return [];
   }
 };
@@ -258,7 +259,7 @@ export const getRequestsBySpecialty = async (
 
     return mapRequestsFromSnapshot(snapshot);
   } catch (error) {
-    console.error('❌ Error obteniendo solicitudes por especialidad:', error);
+    log.error('❌ Error obteniendo solicitudes por especialidad:', error);
     return [];
   }
 };
@@ -312,7 +313,7 @@ export const getRequestStatsByCategory = async (): Promise<
 
     return Array.from(statsMap.values());
   } catch (error) {
-    console.error('❌ Error obteniendo estadísticas por categoría:', error);
+    log.error('❌ Error obteniendo estadísticas por categoría:', error);
     return [];
   }
 };
@@ -358,7 +359,7 @@ export const countRequestsByStatusAndCategory = async (
 
     return { byStatus, byCategory };
   } catch (error) {
-    console.error('❌ Error contando solicitudes:', error);
+    log.error('❌ Error contando solicitudes:', error);
     return {
       byStatus: {
         pendiente: 0,
@@ -443,7 +444,7 @@ export const getFilteredRequests = async (
 
     return requests;
   } catch (error) {
-    console.error('❌ Error obteniendo solicitudes filtradas:', error);
+    log.error('❌ Error obteniendo solicitudes filtradas:', error);
     return [];
   }
 };
@@ -464,10 +465,10 @@ export const getRequestById = async (requestId: string): Promise<Request | null>
       return mapRequestFromDoc(snapshot);
     }
 
-    console.warn(`⚠️ Solicitud no encontrada: ${requestId}`);
+    log.warning(`⚠️ Solicitud no encontrada: ${requestId}`);
     return null;
   } catch (error) {
-    console.error(`❌ Error obteniendo solicitud ${requestId}:`, error);
+    log.error(`❌ Error obteniendo solicitud ${requestId}:`, error);
     return null;
   }
 };
@@ -505,12 +506,12 @@ export const updateRequestStatus = async (
 
     // ✅ Actualizar en Firestore
     await updateDoc(docRef, updateData);
-    console.log(`✅ Solicitud ${requestId} actualizada a: ${status}`);
+    log.info(`✅ Solicitud ${requestId} actualizada a: ${status}`);
 
     // ✅ Crear notificaciones según el estado
     await createStatusNotifications(request, status, { response, whatsappContact });
   } catch (error) {
-    console.error('❌ Error actualizando solicitud:', error);
+    log.error('❌ Error actualizando solicitud:', error);
     throw new Error(error instanceof Error ? error.message : 'Error al actualizar la solicitud');
   }
 };
@@ -577,7 +578,7 @@ export const getClientRequests = async (
 
     return mapRequestsFromSnapshot(snapshot);
   } catch (error) {
-    console.error('❌ Error obteniendo solicitudes del cliente:', error);
+    log.error('❌ Error obteniendo solicitudes del cliente:', error);
     return [];
   }
 };
@@ -604,7 +605,7 @@ export const getProviderRequests = async (
 
     return mapRequestsFromSnapshot(snapshot);
   } catch (error) {
-    console.error('❌ Error obteniendo solicitudes del proveedor:', error);
+    log.error('❌ Error obteniendo solicitudes del proveedor:', error);
     return [];
   }
 };
@@ -628,7 +629,7 @@ export const getPendingRequests = async (
 
     return mapRequestsFromSnapshot(snapshot);
   } catch (error) {
-    console.error('❌ Error obteniendo solicitudes pendientes:', error);
+    log.error('❌ Error obteniendo solicitudes pendientes:', error);
     return [];
   }
 };
@@ -673,7 +674,7 @@ export const countRequestsByStatus = async (
 
     return counts;
   } catch (error) {
-    console.error('❌ Error contando solicitudes:', error);
+    log.error('❌ Error contando solicitudes:', error);
     return {
       pendiente: 0,
       aceptado: 0,
@@ -695,9 +696,9 @@ export const deleteRequest = async (requestId: string): Promise<void> => {
       status: 'eliminado',
       updatedAt: serverTimestamp(),
     });
-    console.log(`✅ Solicitud ${requestId} marcada como eliminada`);
+    log.info(`✅ Solicitud ${requestId} marcada como eliminada`);
   } catch (error) {
-    console.error('❌ Error eliminando solicitud:', error);
+    log.error('❌ Error eliminando solicitud:', error);
     throw new Error('Error al eliminar la solicitud');
   }
 };

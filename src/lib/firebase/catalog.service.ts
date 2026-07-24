@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import {
   Category,
   ProviderSpecialty,
@@ -49,7 +50,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
     });
     return categories;
   } catch (error) {
-    console.error('Error obteniendo categorías:', error);
+    log.error('Error obteniendo categorías:', error);
     return [];
   }
 };
@@ -64,7 +65,7 @@ export const getCategoryById = async (categoryId: string): Promise<Category | nu
     }
     return null;
   } catch (error) {
-    console.error('Error obteniendo categoría:', error);
+    log.error('Error obteniendo categoría:', error);
     return null;
   }
 };
@@ -88,7 +89,7 @@ export const getAllSpecialties = async (): Promise<Specialty[]> => {
     });
     return specialties;
   } catch (error) {
-    console.error('Error obteniendo especialidades:', error);
+    log.error('Error obteniendo especialidades:', error);
     return [];
   }
 };
@@ -109,7 +110,7 @@ export const getSpecialtiesByCategory = async (categoryId: string): Promise<Spec
     });
     return specialties;
   } catch (error) {
-    console.error('Error obteniendo especialidades por categoría:', error);
+    log.error('Error obteniendo especialidades por categoría:', error);
     return [];
   }
 };
@@ -124,7 +125,7 @@ export const getSpecialtyById = async (specialtyId: string): Promise<Specialty |
     }
     return null;
   } catch (error) {
-    console.error('Error obteniendo especialidad:', error);
+    log.error('Error obteniendo especialidad:', error);
     return null;
   }
 };
@@ -150,7 +151,7 @@ export const getSubSpecialtiesBySpecialty = async (
     });
     return subSpecialties;
   } catch (error) {
-    console.error('Error obteniendo subespecialidades:', error);
+    log.error('Error obteniendo subespecialidades:', error);
     return [];
   }
 };
@@ -178,7 +179,7 @@ export const getFullCatalog = async (): Promise<ServiceCatalog> => {
       totalSpecialties: specialties.length,
     };
   } catch (error) {
-    console.error('Error obteniendo catálogo completo:', error);
+    log.error('Error obteniendo catálogo completo:', error);
     return {
       categories: [],
       specialties: [],
@@ -210,7 +211,7 @@ export const createCategory = async (
 
     return docRef.id;
   } catch (error) {
-    console.error('Error creando categoría:', error);
+    log.error('Error creando categoría:', error);
     throw new Error('Error al crear la categoría');
   }
 };
@@ -227,7 +228,7 @@ export const updateCategory = async (
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error actualizando categoría:', error);
+    log.error('Error actualizando categoría:', error);
     throw new Error('Error al actualizar la categoría');
   }
 };
@@ -267,7 +268,7 @@ export const getProviderSpecialties = async (providerId: string): Promise<Provid
     }
     return [];
   } catch (error) {
-    console.error('Error obteniendo especialidades del proveedor:', error);
+    log.error('Error obteniendo especialidades del proveedor:', error);
     return [];
   }
 };
@@ -289,7 +290,7 @@ export const searchProvidersBySpecialty = async (
     const dbInstance = getDb();
 
     if (!specialtyId) {
-      console.warn('⚠️ specialtyId no proporcionado');
+      log.warning('⚠️ specialtyId no proporcionado');
       return { providers: [], lastDoc: null, total: 0 };
     }
 
@@ -307,7 +308,7 @@ export const searchProvidersBySpecialty = async (
         limit(limitCount)
       );
     } catch (indexError) {
-      console.warn('⚠️ Error con índice de specialties:', indexError);
+      log.warning('⚠️ Error con índice de specialties:', indexError);
       q = query(
         collection(dbInstance, 'providers'),
         where('isActive', '==', true),
@@ -366,7 +367,7 @@ export const searchProvidersBySpecialty = async (
       total: providers.length,
     };
   } catch (error) {
-    console.error('Error buscando proveedores:', error);
+    log.error('Error buscando proveedores:', error);
     return { providers: [], lastDoc: null, total: 0 };
   }
 };
@@ -415,7 +416,7 @@ export const getProviderSpecialtiesOptimized = async (
 
     return specialties;
   } catch (error) {
-    console.error('Error obteniendo especialidades del proveedor:', error);
+    log.error('Error obteniendo especialidades del proveedor:', error);
     return [];
   }
 };
@@ -431,7 +432,7 @@ export const searchProvidersBySpecialtySimple = async (
     const result = await searchProvidersBySpecialty(specialtyId, location, 50);
     return result.providers;
   } catch (error) {
-    console.error('Error buscando proveedores (simple):', error);
+    log.error('Error buscando proveedores (simple):', error);
     return [];
   }
 };

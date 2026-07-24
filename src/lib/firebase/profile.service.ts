@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { updateProfile, User } from 'firebase/auth';
 import { doc, Firestore, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from './config';
@@ -48,7 +49,7 @@ export const getUserProfile = async (uid: string): Promise<any> => {
     }
     return null;
   } catch (error) {
-    console.error('Error obteniendo perfil:', error);
+    log.error('Error obteniendo perfil:', error);
     return null;
   }
 };
@@ -100,7 +101,7 @@ export const updateUserProfile = async (
           photoURL: data.photoURL || null,
         });
       } catch (authError) {
-        console.warn('Error actualizando perfil en Auth:', authError);
+        log.warning('Error actualizando perfil en Auth:', authError);
       }
     }
 
@@ -128,9 +129,9 @@ export const updateUserProfile = async (
       }
     }
 
-    console.log('✅ Perfil actualizado correctamente');
+    log.info('✅ Perfil actualizado correctamente');
   } catch (error) {
-    console.error('Error actualizando perfil:', error);
+    log.error('Error actualizando perfil:', error);
     throw new Error('Error al actualizar el perfil');
   }
 };

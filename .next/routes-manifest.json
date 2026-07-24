@@ -40,6 +40,24 @@
         }
       ],
       "regex": "^(?:/(.*))(?:/)?$"
+    },
+    {
+      "source": "/firebase-messaging-sw.js",
+      "headers": [
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ],
+      "regex": "^/firebase-messaging-sw\\.js(?:/)?$"
     }
   ],
   "rewrites": {

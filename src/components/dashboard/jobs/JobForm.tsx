@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORIES } from '@/lib/constants/categories';
@@ -65,7 +66,7 @@ export const JobForm = ({ jobId, onClose, onSuccess }: JobFormProps) => {
           });
         }
       } catch (error) {
-        console.error('Error cargando oferta:', error);
+        log.error('Error cargando oferta:', error);
         toast.error('Error al cargar la oferta');
       } finally {
         setLoading(false);
@@ -164,7 +165,7 @@ export const JobForm = ({ jobId, onClose, onSuccess }: JobFormProps) => {
         router.push('/dashboard/jobs');
       }
     } catch (error) {
-      console.error('Error guardando oferta:', error);
+      log.error('Error guardando oferta:', error);
       toast.error(isEditing ? 'Error al actualizar la oferta' : 'Error al crear la oferta');
     } finally {
       setSaving(false);

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import {
   getUserData,
@@ -78,11 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const parsedUser = JSON.parse(savedUser);
             if (parsedUser.uid === firebaseUser.uid) {
               setUser(parsedUser);
-              console.log('📝 Usuario cargado de localStorage (fallback)');
+              log.info('📝 Usuario cargado de localStorage (fallback)');
               return;
             }
           } catch (e) {
-            console.warn('⚠️ Error parseando usuario de localStorage');
+            log.warning('⚠️ Error parseando usuario de localStorage');
           }
         }
 
@@ -100,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(basicUser);
       }
     } catch (error) {
-      console.error('Error cargando datos de usuario:', error);
+      log.error('Error cargando datos de usuario:', error);
 
       // ✅ Último recurso: usar localStorage
       const savedRole = localStorage.getItem('user-role') as 'client' | 'provider' | undefined;
@@ -126,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await new Promise((resolve) => setTimeout(resolve, 100));
         router.replace('/dashboard');
       } catch (error) {
-        console.error('Error en redirección:', error);
+        log.error('Error en redirección:', error);
         router.replace('/dashboard');
       }
     },
@@ -141,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!auth) {
-      console.warn('⚠️ Firebase Auth no está disponible');
+      log.warning('⚠️ Firebase Auth no está disponible');
       setLoading(false);
       return;
     }
@@ -157,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             toast.success('¡Bienvenido a BuildLink con Google!');
           }
         } catch (error: any) {
-          console.error('Error en redirect de Google:', error);
+          log.error('Error en redirect de Google:', error);
           toast.error('Error al iniciar sesión con Google');
           router.replace('/login');
         }
@@ -169,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!isMounted) return;
 
-      console.log('🔐 Auth state changed:', firebaseUser?.uid || 'No user');
+      log.info('🔐 Auth state changed:', firebaseUser?.uid || 'No user');
       setFirebaseUser(firebaseUser);
 
       if (firebaseUser) {
@@ -198,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.location.pathname === '/';
 
       if (isAuthPath) {
-        console.log('🔄 Redirigiendo a dashboard');
+        log.info('🔄 Redirigiendo a dashboard');
         router.replace('/dashboard');
       }
     }
@@ -212,7 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await redirectAfterAuth(firebaseUser);
       toast.success('¡Bienvenido a BuildLink!');
     } catch (error: any) {
-      console.error('Error en login:', error);
+      log.error('Error en login:', error);
       let errorMessage = error.message || 'Error al iniciar sesión';
 
       if (
@@ -236,14 +237,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogleHandler = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Iniciando login con Google...');
+      log.info('🔄 Iniciando login con Google...');
       const user = await loginWithGoogle();
-      console.log('✅ Usuario autenticado con Google:', user.uid);
+      log.info('✅ Usuario autenticado con Google:', user.uid);
 
       await redirectAfterAuth(user);
       toast.success('¡Bienvenido a BuildLink con Google!');
     } catch (error: any) {
-      console.error('Error en login con Google:', error);
+      log.error('Error en login con Google:', error);
 
       if (error.message?.includes('bloqueado') || error.message?.includes('popup-blocked')) {
         toast.error(
@@ -335,7 +336,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!firebaseUser) throw new Error('Usuario no autenticado');
 
     try {
-      console.log('🔄 Actualizando usuario:', data);
+      log.info('🔄 Actualizando usuario:', data);
 
       if (data.role) {
         await updateUserRoleWithRetry(firebaseUser.uid, data.role);
@@ -346,7 +347,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await refreshUser();
       toast.success('Perfil actualizado correctamente');
     } catch (error: any) {
-      console.error('❌ Error actualizando usuario:', error);
+      log.error('❌ Error actualizando usuario:', error);
       toast.error(error.message || 'Error al actualizar el perfil');
       throw error;
     }

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useRole } from '@/contexts/RoleContext';
 import { Briefcase, Check, Loader2, Shield, User, X } from 'lucide-react';
@@ -43,7 +44,7 @@ export const RoleSelectorModal = ({ onComplete }: RoleSelectorModalProps) => {
     setTimeoutId(timeout);
 
     try {
-      console.log(`🔄 Intentando asignar rol: ${selectedRole}`);
+      log.info(`🔄 Intentando asignar rol: ${selectedRole}`);
 
       // ✅ Guardar en localStorage como respaldo
       localStorage.setItem('user-role', selectedRole);
@@ -60,7 +61,7 @@ export const RoleSelectorModal = ({ onComplete }: RoleSelectorModalProps) => {
         onComplete();
       }
     } catch (error: any) {
-      console.error('Error seleccionando rol:', error);
+      log.error('Error seleccionando rol:', error);
 
       let errorMessage = error.message || 'Error al seleccionar rol';
       if (errorMessage.includes('offline') || errorMessage.includes('network')) {

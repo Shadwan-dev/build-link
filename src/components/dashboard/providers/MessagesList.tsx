@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { respondToMessage } from '@/lib/firebase/message.service';
 import { MessageForm } from '@/types/message.types';

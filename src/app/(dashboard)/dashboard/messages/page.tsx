@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { ChatList } from '@/components/dashboard/messages/ChatList';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,7 +21,7 @@ export default function MessagesPage() {
       const data = await getUserChats(user.uid);
       setChats(data);
     } catch (error) {
-      console.error('Error cargando chats:', error);
+      log.error('Error cargando chats:', error);
     } finally {
       setLoading(false);
     }

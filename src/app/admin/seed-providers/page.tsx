@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import {
   collection,
@@ -138,7 +139,7 @@ export default function SeedProvidersPage() {
       const snapshot = await getDocs(providersRef);
       return snapshot.size;
     } catch (error) {
-      console.error('Error verificando proveedores:', error);
+      log.error('Error verificando proveedores:', error);
       return -1;
     }
   };
@@ -205,7 +206,7 @@ export default function SeedProvidersPage() {
       }
     } catch (error: any) {
       addResult(`❌ Error general: ${error.message}`, 'error');
-      console.error('Error:', error);
+      log.error('Error:', error);
     } finally {
       setLoading(false);
     }

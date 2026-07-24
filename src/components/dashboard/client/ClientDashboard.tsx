@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Activity } from '@/types/dashboard.types';

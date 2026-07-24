@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,7 +56,7 @@ export const RoleSelector = ({ onRoleSelected }: RoleSelectorProps) => {
         router.push('/dashboard');
       }
     } catch (error: any) {
-      console.error('Error seleccionando rol:', error);
+      log.error('Error seleccionando rol:', error);
       toast.error(error.message || 'Error al seleccionar rol');
     } finally {
       setLoading(false);

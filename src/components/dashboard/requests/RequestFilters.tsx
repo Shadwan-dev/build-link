@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { RequestFilterOptions, RequestStatus, UrgencyLevel } from '@/types/request.types';
 import { Filter, Search, X } from 'lucide-react';

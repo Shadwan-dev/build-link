@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { Job, JobApplication } from '@/types/job.types';
 import {
   collection,
@@ -44,7 +45,7 @@ export const createJob = async (
     await setDoc(docRef, jobData);
     return docRef.id;
   } catch (error) {
-    console.error('Error creando oferta:', error);
+    log.error('Error creando oferta:', error);
     throw new Error('Error al crear la oferta');
   }
 };
@@ -63,7 +64,7 @@ export const getProviderJobs = async (providerId: string): Promise<Job[]> => {
     });
     return jobs;
   } catch (error) {
-    console.error('Error obteniendo ofertas:', error);
+    log.error('Error obteniendo ofertas:', error);
     return [];
   }
 };
@@ -82,7 +83,7 @@ export const getActiveJobs = async (): Promise<Job[]> => {
     });
     return jobs;
   } catch (error) {
-    console.error('Error obteniendo ofertas activas:', error);
+    log.error('Error obteniendo ofertas activas:', error);
     return [];
   }
 };
@@ -106,7 +107,7 @@ export const getJobsByCategory = async (category: string): Promise<Job[]> => {
     });
     return jobs;
   } catch (error) {
-    console.error('Error obteniendo ofertas por categoría:', error);
+    log.error('Error obteniendo ofertas por categoría:', error);
     return [];
   }
 };
@@ -127,7 +128,7 @@ export const getJobById = async (jobId: string): Promise<Job | null> => {
     }
     return null;
   } catch (error) {
-    console.error('Error obteniendo oferta:', error);
+    log.error('Error obteniendo oferta:', error);
     return null;
   }
 };
@@ -142,7 +143,7 @@ export const updateJob = async (jobId: string, data: Partial<Job>): Promise<void
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error actualizando oferta:', error);
+    log.error('Error actualizando oferta:', error);
     throw new Error('Error al actualizar la oferta');
   }
 };
@@ -154,7 +155,7 @@ export const deleteJob = async (jobId: string): Promise<void> => {
     const docRef = doc(dbInstance, 'jobs', jobId);
     await deleteDoc(docRef);
   } catch (error) {
-    console.error('Error eliminando oferta:', error);
+    log.error('Error eliminando oferta:', error);
     throw new Error('Error al eliminar la oferta');
   }
 };
@@ -215,7 +216,7 @@ export const applyToJob = async (
 
     return docRef.id;
   } catch (error) {
-    console.error('Error aplicando a oferta:', error);
+    log.error('Error aplicando a oferta:', error);
     throw new Error('Error al aplicar a la oferta');
   }
 };
@@ -234,7 +235,7 @@ export const getJobApplications = async (jobId: string): Promise<JobApplication[
     });
     return applications;
   } catch (error) {
-    console.error('Error obteniendo aplicaciones:', error);
+    log.error('Error obteniendo aplicaciones:', error);
     return [];
   }
 };
@@ -252,7 +253,7 @@ export const updateApplicationStatus = async (
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error actualizando aplicación:', error);
+    log.error('Error actualizando aplicación:', error);
     throw new Error('Error al actualizar la aplicación');
   }
 };

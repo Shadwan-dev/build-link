@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import {
   Auth,
   createUserWithEmailAndPassword,
@@ -97,7 +98,7 @@ const registerUser = async (
 
     return userCredential;
   } catch (error: any) {
-    console.error('❌ Error en registro:', error);
+    log.error('❌ Error en registro:', error);
     throw new Error(getErrorMessage(error.code));
   }
 };
@@ -137,12 +138,12 @@ const loginUser = async (email: string, password: string): Promise<User> => {
         });
       }
     } catch (firestoreError) {
-      console.warn('⚠️ Error en Firestore, pero usuario autenticado:', firestoreError);
+      log.warning('⚠️ Error en Firestore, pero usuario autenticado:', firestoreError);
     }
 
     return user;
   } catch (error: any) {
-    console.error('❌ Error en login:', error);
+    log.error('❌ Error en login:', error);
     throw new Error(getErrorMessage(error.code));
   }
 };
@@ -155,7 +156,7 @@ const logoutUser = async (): Promise<void> => {
     const authInstance = getAuth();
     await signOut(authInstance);
   } catch (error: any) {
-    console.error('❌ Error en logout:', error);
+    log.error('❌ Error en logout:', error);
     throw new Error('Error al cerrar sesión');
   }
 };
@@ -168,7 +169,7 @@ const resetPassword = async (email: string): Promise<void> => {
     const authInstance = getAuth();
     await sendPasswordResetEmail(authInstance, email);
   } catch (error: any) {
-    console.error('❌ Error en reset password:', error);
+    log.error('❌ Error en reset password:', error);
     throw new Error(getErrorMessage(error.code));
   }
 };
@@ -187,7 +188,7 @@ const getUserData = async (uid: string): Promise<UserData | null> => {
     }
     return null;
   } catch (error: any) {
-    console.warn('⚠️ Error obteniendo usuario de Firestore:', error.message);
+    log.warning('⚠️ Error obteniendo usuario de Firestore:', error.message);
     return null;
   }
 };
@@ -201,7 +202,7 @@ const updateUserRoleWithRetry = async (
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🔄 Intento ${attempt}/${maxRetries} para actualizar rol...`);
+      log.info(`🔄 Intento ${attempt}/${maxRetries} para actualizar rol...`);
 
       const dbInstance = getDb();
 
@@ -211,7 +212,7 @@ const updateUserRoleWithRetry = async (
         updatedAt: serverTimestamp(),
       });
 
-      console.log(`✅ Rol actualizado a: ${role} (intento ${attempt})`);
+      log.info(`✅ Rol actualizado a: ${role} (intento ${attempt})`);
 
       // Si es proveedor, crear entrada en providers
       if (role === 'provider') {
@@ -237,24 +238,24 @@ const updateUserRoleWithRetry = async (
             }
           }
         } catch (providerError) {
-          console.warn('⚠️ Error creando perfil de proveedor:', providerError);
+          log.warning('⚠️ Error creando perfil de proveedor:', providerError);
         }
       }
 
       return; // ✅ Éxito
     } catch (error) {
       lastError = error;
-      console.warn(`⚠️ Intento ${attempt} fallido:`, error);
+      log.warning(`⚠️ Intento ${attempt} fallido:`, error);
 
       if (attempt < maxRetries) {
         const delay = 1000 * attempt;
-        console.log(`⏳ Esperando ${delay}ms antes de reintentar...`);
+        log.info(`⏳ Esperando ${delay}ms antes de reintentar...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
 
-  console.error('❌ Todos los intentos de actualización fallaron:', lastError);
+  log.error('❌ Todos los intentos de actualización fallaron:', lastError);
   throw new Error('No se pudo actualizar el rol. Verifica tu conexión.');
 };
 
@@ -268,9 +269,9 @@ const updateUserData = async (uid: string, data: Partial<UserData>): Promise<voi
       ...data,
       updatedAt: serverTimestamp(),
     });
-    console.log('✅ Datos de usuario actualizados');
+    log.info('✅ Datos de usuario actualizados');
   } catch (error: any) {
-    console.error('❌ Error actualizando usuario:', error);
+    log.error('❌ Error actualizando usuario:', error);
     throw new Error('Error al actualizar perfil');
   }
 };
@@ -310,13 +311,13 @@ const updateUserRole = async (uid: string, role: 'client' | 'provider'): Promise
           }
         }
       } catch (providerError) {
-        console.warn('⚠️ Error creando perfil de proveedor:', providerError);
+        log.warning('⚠️ Error creando perfil de proveedor:', providerError);
       }
     }
 
-    console.log(`✅ Rol actualizado a: ${role}`);
+    log.info(`✅ Rol actualizado a: ${role}`);
   } catch (error: any) {
-    console.error('❌ Error actualizando rol:', error);
+    log.error('❌ Error actualizando rol:', error);
     throw new Error('Error al actualizar el rol');
   }
 };
@@ -375,12 +376,12 @@ const loginWithGoogle = async (): Promise<User> => {
         });
       }
     } catch (firestoreError) {
-      console.warn('⚠️ Error guardando usuario en Firestore:', firestoreError);
+      log.warning('⚠️ Error guardando usuario en Firestore:', firestoreError);
     }
 
     return user;
   } catch (error: any) {
-    console.error('❌ Error en login con Google:', error);
+    log.error('❌ Error en login con Google:', error);
 
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error('Inicio de sesión cancelado');
@@ -406,7 +407,7 @@ const loginWithGoogleRedirect = async (): Promise<void> => {
     provider.setCustomParameters({ prompt: 'select_account' });
     await signInWithRedirect(authInstance, provider);
   } catch (error: any) {
-    console.error('❌ Error en redirect a Google:', error);
+    log.error('❌ Error en redirect a Google:', error);
     throw new Error(getErrorMessage(error.code));
   }
 };
@@ -454,14 +455,14 @@ const handleGoogleRedirect = async (): Promise<User | null> => {
           });
         }
       } catch (firestoreError) {
-        console.warn('⚠️ Error guardando usuario en Firestore:', firestoreError);
+        log.warning('⚠️ Error guardando usuario en Firestore:', firestoreError);
       }
 
       return user;
     }
     return null;
   } catch (error: any) {
-    console.error('❌ Error en handleGoogleRedirect:', error);
+    log.error('❌ Error en handleGoogleRedirect:', error);
     throw new Error(getErrorMessage(error.code));
   }
 };

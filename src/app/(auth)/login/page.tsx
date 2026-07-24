@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { BackgroundCarousel } from '@/components/common/BackgroundCarousel';
 import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
@@ -87,7 +88,7 @@ export default function LoginPage() {
       await loginWithGoogle();
       // La redirección la maneja el AuthContext
     } catch (error: any) {
-      console.error('Error en Google Login:', error);
+      log.error('Error en Google Login:', error);
       if (error.message?.includes('popup-blocked')) {
         setErrors({
           general:

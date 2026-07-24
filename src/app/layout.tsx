@@ -1,3 +1,5 @@
+import { log } from '@/lib/utils/logger';
+import { PushNotificationManager } from '@/components/common/PushNotificationManager';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import type { Metadata } from 'next';
@@ -88,6 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <ThemeProvider>
           <AuthProvider>
+            <PushNotificationManager />
             {children}
             <Toaster
               position="top-right"

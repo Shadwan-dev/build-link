@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Building2, Droplets, Hammer, Home, PaintBucket, Trees, Users, Zap } from 'lucide-react';
 

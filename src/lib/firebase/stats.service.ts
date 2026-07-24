@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { Firestore, collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { db } from './config';
 
@@ -85,7 +86,7 @@ export const getProviderStats = async (providerId: string): Promise<ProviderStat
       responseRate,
     };
   } catch (error) {
-    console.error('Error obteniendo estadísticas:', error);
+    log.error('Error obteniendo estadísticas:', error);
     return {
       totalJobs: 0,
       activeJobs: 0,
@@ -127,7 +128,7 @@ export const getCategoryStats = async (providerId: string): Promise<CategoryStat
       applications: stats.applications,
     }));
   } catch (error) {
-    console.error('Error obteniendo estadísticas por categoría:', error);
+    log.error('Error obteniendo estadísticas por categoría:', error);
     return [];
   }
 };
@@ -181,7 +182,7 @@ export const getMonthlyStats = async (providerId: string): Promise<MonthlyStats[
 
     return monthStats;
   } catch (error) {
-    console.error('Error obteniendo estadísticas mensuales:', error);
+    log.error('Error obteniendo estadísticas mensuales:', error);
     return [];
   }
 };
@@ -241,7 +242,7 @@ export const getRecentActivity = async (
 
     return activities;
   } catch (error) {
-    console.error('Error obteniendo actividad reciente:', error);
+    log.error('Error obteniendo actividad reciente:', error);
     return [];
   }
 };

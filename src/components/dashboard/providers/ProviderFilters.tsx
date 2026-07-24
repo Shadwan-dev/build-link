@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { useState } from 'react';

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { ProviderFilters } from '@/components/dashboard/providers/ProviderFilters';
 import { ProviderList } from '@/components/dashboard/providers/ProviderList';
@@ -21,7 +22,7 @@ export default function ProvidersPage() {
         setProviders(result.providers);
         setFilteredProviders(result.providers);
       } catch (error) {
-        console.error('Error cargando proveedores:', error);
+        log.error('Error cargando proveedores:', error);
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -168,7 +169,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle, isDisabled = false }: S
         position: 'bottom-center',
       });
     } catch (error) {
-      console.error('Error cambiando rol:', error);
+      log.error('Error cambiando rol:', error);
       toast.error('❌ Error al cambiar de rol');
     } finally {
       setIsSwitching(false);

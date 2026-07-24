@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { ActivityFeed } from '@/components/dashboard/shared/ActivityFeed';
 import { CategoryChart } from '@/components/dashboard/stats/CategoryChart';
@@ -51,7 +52,7 @@ export default function StatsPage() {
       setMonthlyStats(monthlyData);
       setRecentActivity(activityData);
     } catch (error) {
-      console.error('Error cargando estadísticas:', error);
+      log.error('Error cargando estadísticas:', error);
     } finally {
       setLoading(false);
     }

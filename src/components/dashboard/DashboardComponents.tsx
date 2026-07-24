@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import dynamic from 'next/dynamic';
 
 // ✅ Carga perezosa de componentes pesados

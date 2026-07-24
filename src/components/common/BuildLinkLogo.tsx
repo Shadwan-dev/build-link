@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 interface BuildLinkLogoProps {
   className?: string;

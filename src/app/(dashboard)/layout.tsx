@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Navbar } from '@/components/common/Navbar'; // ✅ Usar Navbar común
 import { Sidebar } from '@/components/dashboard/Sidebar';

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { CountryCode, getAvailableCountries } from '@/lib/utils/identification.validation';
 import { Check, ChevronDown, Globe } from 'lucide-react';

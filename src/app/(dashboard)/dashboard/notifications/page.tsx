@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -23,7 +24,7 @@ export default function NotificationsPage() {
       const data = await getUserNotifications(user.uid);
       setNotifications(data);
     } catch (error) {
-      console.error('Error cargando notificaciones:', error);
+      log.error('Error cargando notificaciones:', error);
     } finally {
       setLoading(false);
     }

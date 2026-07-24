@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { Chat, ChatMessage } from '@/types/message.types';
 import {
   Firestore,
@@ -55,7 +56,7 @@ export const createChat = async (
     const docRef = await addDoc(chatsRef, chatData);
     return docRef.id;
   } catch (error) {
-    console.error('Error creando chat:', error);
+    log.error('Error creando chat:', error);
     throw new Error('Error al crear el chat');
   }
 };
@@ -116,7 +117,7 @@ export const sendMessage = async (
 
     return docRef.id;
   } catch (error) {
-    console.error('Error enviando mensaje:', error);
+    log.error('Error enviando mensaje:', error);
     throw new Error('Error al enviar el mensaje');
   }
 };
@@ -139,7 +140,7 @@ export const getChatMessages = async (chatId: string): Promise<ChatMessage[]> =>
     });
     return messages;
   } catch (error) {
-    console.error('Error obteniendo mensajes:', error);
+    log.error('Error obteniendo mensajes:', error);
     return [];
   }
 };
@@ -166,7 +167,7 @@ export const getUserChats = async (userId: string): Promise<Chat[]> => {
     });
     return chats;
   } catch (error) {
-    console.error('Error obteniendo chats:', error);
+    log.error('Error obteniendo chats:', error);
     return [];
   }
 };
@@ -190,7 +191,7 @@ export const markMessagesAsRead = async (chatId: string, userId: string): Promis
       unreadCount: 0,
     });
   } catch (error) {
-    console.error('Error marcando mensajes como leídos:', error);
+    log.error('Error marcando mensajes como leídos:', error);
   }
 };
 
@@ -210,7 +211,7 @@ export const getChatByRequest = async (requestId: string): Promise<Chat | null> 
     }
     return null;
   } catch (error) {
-    console.error('Error obteniendo chat:', error);
+    log.error('Error obteniendo chat:', error);
     return null;
   }
 };

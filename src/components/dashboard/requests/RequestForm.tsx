@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORIES } from '@/lib/constants/categories';
@@ -99,7 +100,7 @@ export const RequestForm = ({ providerId, providerName, onClose, onSuccess }: Re
       onClose();
       router.push('/dashboard/requests');
     } catch (error: any) {
-      console.error('Error al enviar solicitud:', error);
+      log.error('Error al enviar solicitud:', error);
       toast.error(error.message || 'Error al enviar la solicitud');
     } finally {
       setLoading(false);

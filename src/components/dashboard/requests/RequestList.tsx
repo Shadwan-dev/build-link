@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Request } from '@/types/request.types';
 import { FileText, Loader2 } from 'lucide-react';

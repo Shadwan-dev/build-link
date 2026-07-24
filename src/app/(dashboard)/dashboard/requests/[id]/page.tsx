@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { RequestForm } from '@/components/dashboard/requests/RequestForm';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,7 +51,7 @@ export default function RequestDetailPage() {
         router.push('/dashboard/requests');
       }
     } catch (error) {
-      console.error('Error cargando solicitud:', error);
+      log.error('Error cargando solicitud:', error);
       toast.error('Error al cargar la solicitud');
     } finally {
       setLoading(false);

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Activity } from '@/types/dashboard.types';
 import { ArrowRight, CheckCircle, Clock, FileText, MessageSquare } from 'lucide-react';

@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { CreateReviewInput, Review, ReviewFilterOptions, ReviewStats } from '@/types/review.types';
 import {
   collection,
@@ -95,7 +96,7 @@ export const createReview = async (data: CreateReviewInput): Promise<string> => 
 
     return docRef.id;
   } catch (error) {
-    console.error('❌ Error creando valoración:', error);
+    log.error('❌ Error creando valoración:', error);
     throw new Error(error instanceof Error ? error.message : 'Error al crear la valoración');
   }
 };
@@ -133,7 +134,7 @@ export const getProviderReviews = async (
 
     return { reviews, lastDoc: lastVisible };
   } catch (error) {
-    console.error('❌ Error obteniendo valoraciones:', error);
+    log.error('❌ Error obteniendo valoraciones:', error);
     return { reviews: [], lastDoc: null };
   }
 };
@@ -152,7 +153,7 @@ export const getReviewById = async (reviewId: string): Promise<Review | null> =>
     }
     return null;
   } catch (error) {
-    console.error('❌ Error obteniendo valoración:', error);
+    log.error('❌ Error obteniendo valoración:', error);
     return null;
   }
 };
@@ -230,7 +231,7 @@ export const getReviewStats = async (providerId: string): Promise<ReviewStats> =
       recentReviews: sortedReviews.slice(0, 5),
     };
   } catch (error) {
-    console.error('❌ Error obteniendo estadísticas:', error);
+    log.error('❌ Error obteniendo estadísticas:', error);
     return {
       averageRating: 0,
       totalReviews: 0,
@@ -267,7 +268,7 @@ export const updateReview = async (reviewId: string, data: Partial<Review>): Pro
       }
     }
   } catch (error) {
-    console.error('❌ Error actualizando valoración:', error);
+    log.error('❌ Error actualizando valoración:', error);
     throw new Error('Error al actualizar la valoración');
   }
 };
@@ -291,7 +292,7 @@ export const deleteReview = async (reviewId: string): Promise<void> => {
       await updateProviderRating(review.providerId);
     }
   } catch (error) {
-    console.error('❌ Error eliminando valoración:', error);
+    log.error('❌ Error eliminando valoración:', error);
     throw new Error('Error al eliminar la valoración');
   }
 };
@@ -335,7 +336,7 @@ export const canClientReview = async (
 
     return { canReview: true, message: 'Puedes valorar esta solicitud' };
   } catch (error) {
-    console.error('❌ Error verificando:', error);
+    log.error('❌ Error verificando:', error);
     return { canReview: false, message: 'Error al verificar' };
   }
 };
@@ -385,7 +386,7 @@ export const getFilteredReviews = async (
 
     return { reviews, total: reviews.length };
   } catch (error) {
-    console.error('❌ Error obteniendo valoraciones filtradas:', error);
+    log.error('❌ Error obteniendo valoraciones filtradas:', error);
     return { reviews: [], total: 0 };
   }
 };

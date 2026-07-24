@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
@@ -51,7 +52,7 @@ export default function SettingsPage() {
       localStorage.setItem('user-settings', JSON.stringify(settings));
       toast.success('✅ Configuración guardada');
     } catch (error) {
-      console.error('Error guardando configuración:', error);
+      log.error('Error guardando configuración:', error);
       toast.error('Error al guardar configuración');
     } finally {
       setSaving(false);
@@ -67,7 +68,7 @@ export default function SettingsPage() {
         setSettings(parsed);
       }
     } catch (error) {
-      console.error('Error cargando configuración:', error);
+      log.error('Error cargando configuración:', error);
     }
   });
 

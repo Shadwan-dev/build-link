@@ -34,9 +34,10 @@ const nextConfig = {
   // ✅ Output standalone (para Vercel)
   output: 'standalone',
 
-  // ✅ Headers de seguridad
+  // ✅ Headers de seguridad y Service Worker
   async headers() {
     return [
+      // ✅ Headers generales de seguridad
       {
         source: '/(.*)',
         headers: [
@@ -59,6 +60,24 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+        ],
+      },
+      // ✅ Headers específicos para Service Worker
+      {
+        source: '/firebase-messaging-sw.js',
+        headers: [
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
           },
         ],
       },

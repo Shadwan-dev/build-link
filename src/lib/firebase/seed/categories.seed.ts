@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { Category, Specialty } from '@/types/category.types';
 
 // ✅ Datos iniciales de categorías

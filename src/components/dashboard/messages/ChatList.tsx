@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Chat } from '@/types/message.types';
 import { Briefcase, MessageSquare, User } from 'lucide-react';

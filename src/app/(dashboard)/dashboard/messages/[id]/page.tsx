@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
@@ -44,7 +45,7 @@ export default function ChatDetailPage() {
         await markMessagesAsRead(chatId, user.uid);
       }
     } catch (error) {
-      console.error('Error cargando mensajes:', error);
+      log.error('Error cargando mensajes:', error);
     } finally {
       setLoading(false);
     }

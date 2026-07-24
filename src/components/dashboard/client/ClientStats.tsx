@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Briefcase, Clock, Star, Users } from 'lucide-react';
 

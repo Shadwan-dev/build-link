@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { IdentificationValidator } from '@/components/profile/IdentificationValidator';
 import { useAuth } from '@/contexts/AuthContext';
@@ -97,7 +98,7 @@ export default function ProfilePage() {
           setVerification(verificationData);
         }
       } catch (error) {
-        console.error('Error cargando datos:', error);
+        log.error('Error cargando datos:', error);
         toast.error('Error al cargar el perfil');
       } finally {
         setLoading(false);
@@ -191,7 +192,7 @@ export default function ProfilePage() {
       await refreshUser();
       toast.success('✅ Perfil actualizado correctamente');
     } catch (error) {
-      console.error('Error:', error);
+      log.error('Error:', error);
       toast.error('Error al actualizar el perfil');
     } finally {
       setSaving(false);
@@ -283,7 +284,7 @@ export default function ProfilePage() {
       const updated = await getVerificationStatus(user.uid);
       setVerification(updated);
     } catch (error: any) {
-      console.error('Error:', error);
+      log.error('Error:', error);
       toast.error(error.message || 'Error al solicitar verificación');
     } finally {
       setRequestingVerification(false);

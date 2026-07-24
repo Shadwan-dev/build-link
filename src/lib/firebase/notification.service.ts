@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import {
   collection,
   doc,
@@ -78,10 +79,10 @@ export const createNotification = async (
       toast.success('⭐ Nueva valoración recibida');
     }
 
-    console.log('✅ Notificación creada:', title);
+    log.info('✅ Notificación creada:', title);
     return docRef.id;
   } catch (error) {
-    console.error('❌ Error creando notificación:', error);
+    log.error('❌ Error creando notificación:', error);
     toast.error('Error al crear notificación');
     throw new Error('Error al crear notificación');
   }
@@ -122,7 +123,7 @@ export const getUserNotifications = async (
     });
     return notifications;
   } catch (error) {
-    console.error('❌ Error obteniendo notificaciones:', error);
+    log.error('❌ Error obteniendo notificaciones:', error);
     toast.error('Error al cargar notificaciones');
     return [];
   }
@@ -152,7 +153,7 @@ export const getNotificationCount = async (userId: string): Promise<Notification
 
     return { total, unread };
   } catch (error) {
-    console.error('❌ Error contando notificaciones:', error);
+    log.error('❌ Error contando notificaciones:', error);
     return { total: 0, unread: 0 };
   }
 };
@@ -168,9 +169,9 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
       read: true,
       updatedAt: serverTimestamp(),
     });
-    console.log('✅ Notificación marcada como leída');
+    log.info('✅ Notificación marcada como leída');
   } catch (error) {
-    console.error('❌ Error marcando notificación:', error);
+    log.error('❌ Error marcando notificación:', error);
     toast.error('Error al actualizar notificación');
   }
 };
@@ -205,7 +206,7 @@ export const markAllNotificationsAsRead = async (userId: string): Promise<void> 
 
     toast.success('✅ Todas las notificaciones marcadas como leídas');
   } catch (error) {
-    console.error('❌ Error marcando notificaciones:', error);
+    log.error('❌ Error marcando notificaciones:', error);
     toast.error('Error al marcar notificaciones como leídas');
   }
 };
@@ -236,7 +237,7 @@ export const deleteAllNotifications = async (userId: string): Promise<void> => {
 
     toast.success('🗑️ Notificaciones eliminadas');
   } catch (error) {
-    console.error('❌ Error eliminando notificaciones:', error);
+    log.error('❌ Error eliminando notificaciones:', error);
     toast.error('Error al eliminar notificaciones');
   }
 };
@@ -283,7 +284,7 @@ export const subscribeToNotifications = (
 
     return unsubscribe;
   } catch (error) {
-    console.error('❌ Error suscribiéndose a notificaciones:', error);
+    log.error('❌ Error suscribiéndose a notificaciones:', error);
     // ✅ Devolver una función vacía en caso de error
     return () => {};
   }
@@ -329,7 +330,7 @@ export const subscribeToUnreadNotifications = (
 
     return unsubscribe;
   } catch (error) {
-    console.error('❌ Error suscribiéndose a notificaciones no leídas:', error);
+    log.error('❌ Error suscribiéndose a notificaciones no leídas:', error);
     return () => {};
   }
 };

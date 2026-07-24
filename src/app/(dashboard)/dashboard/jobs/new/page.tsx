@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { JobForm } from '@/components/dashboard/jobs/JobForm';
 import { ArrowLeft } from 'lucide-react';

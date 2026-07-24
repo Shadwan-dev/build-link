@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
@@ -77,7 +78,7 @@ export default function NewRequestPage() {
 
     setLoading(true);
     try {
-      console.log('📝 Enviando solicitud con datos:', {
+      log.info('📝 Enviando solicitud con datos:', {
         clientId: user.uid,
         clientName: user.displayName || 'Usuario',
         clientEmail: user.email || '',
@@ -119,7 +120,7 @@ export default function NewRequestPage() {
       toast.success('📩 Solicitud enviada correctamente');
       router.push(`/dashboard/requests/${requestId}`);
     } catch (error: any) {
-      console.error('❌ Error al enviar solicitud:', error);
+      log.error('❌ Error al enviar solicitud:', error);
       toast.error(error.message || 'Error al enviar la solicitud');
     } finally {
       setLoading(false);

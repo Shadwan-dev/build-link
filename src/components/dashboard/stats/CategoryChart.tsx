@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { CategoryStats } from '@/lib/firebase/stats.service';
 

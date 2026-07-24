@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
@@ -147,7 +148,7 @@ export const useDashboardData = (): DashboardData => {
         refresh: loadData,
       });
     } catch (error) {
-      console.error('Error cargando datos del dashboard:', error);
+      log.error('Error cargando datos del dashboard:', error);
       setData((prev) => ({ ...prev, loading: false }));
     } finally {
       setLoading(false);

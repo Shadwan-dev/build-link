@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Provider } from '@/types/dashboard.types';
 import { Clock, MapPin, Star } from 'lucide-react';

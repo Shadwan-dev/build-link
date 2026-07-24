@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { Auth, browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth';
 import { Firestore, getFirestore } from 'firebase/firestore';
@@ -26,8 +27,8 @@ if (typeof window !== 'undefined') {
     // ✅ Auth - Persistencia local
     auth = getAuth(app);
     setPersistence(auth, browserLocalPersistence)
-      .then(() => console.log('✅ Persistencia de Auth configurada'))
-      .catch((error) => console.warn('⚠️ Error setting auth persistence:', error));
+      .then(() => log.info('✅ Persistencia de Auth configurada'))
+      .catch((error) => log.warning('⚠️ Error setting auth persistence:', error));
 
     // ✅ Firestore - Configuración simple y estable
     // getFirestore es suficiente para producción, sin persistencia offline
@@ -38,11 +39,11 @@ if (typeof window !== 'undefined') {
 
     // ✅ Solo log en desarrollo, no en producción
     if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Firebase inicializado correctamente');
-      console.log('📡 Modo: Online');
+      log.info('✅ Firebase inicializado correctamente');
+      log.info('📡 Modo: Online');
     }
   } catch (error) {
-    console.error('❌ Error inicializando Firebase:', error);
+    log.error('❌ Error inicializando Firebase:', error);
   }
 }
 

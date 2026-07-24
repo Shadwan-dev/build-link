@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { ProviderStats } from '@/lib/firebase/stats.service';
 import { Briefcase, CheckCircle, DollarSign, Star } from 'lucide-react';

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -52,7 +53,7 @@ export const NotificationBell = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  console.log('🔔 NotificationBell renderizado', { user: user?.uid, unreadCount });
+  log.info('🔔 NotificationBell renderizado', { user: user?.uid, unreadCount });
 
   // ✅ FUNCIÓN PARA CARGAR NOTIFICACIONES (una sola vez)
   const loadNotifications = async () => {
@@ -64,12 +65,12 @@ export const NotificationBell = () => {
     setLoading(true);
     try {
       const data = await getUserNotifications(user.uid);
-      console.log('🔔 Notificaciones cargadas:', data.length);
+      log.info('🔔 Notificaciones cargadas:', data.length);
       setNotifications(data);
       const unread = data.filter((n) => !n.read).length;
       setUnreadCount(unread);
     } catch (error) {
-      console.error('Error cargando notificaciones:', error);
+      log.error('Error cargando notificaciones:', error);
     } finally {
       setLoading(false);
     }
@@ -82,14 +83,14 @@ export const NotificationBell = () => {
       return;
     }
 
-    console.log('🔔 Suscribiendo a notificaciones en tiempo real...');
+    log.info('🔔 Suscribiendo a notificaciones en tiempo real...');
 
     // ✅ Cargar notificaciones iniciales
     loadNotifications();
 
     // ✅ Suscribirse a cambios en tiempo real
     const unsubscribe = subscribeToNotifications(user.uid, (newNotifications) => {
-      console.log('📩 Notificaciones actualizadas en tiempo real:', newNotifications.length);
+      log.info('📩 Notificaciones actualizadas en tiempo real:', newNotifications.length);
       setNotifications(newNotifications);
       const unread = newNotifications.filter((n) => !n.read).length;
       setUnreadCount(unread);
@@ -108,7 +109,7 @@ export const NotificationBell = () => {
 
     // ✅ Limpiar suscripción al desmontar
     return () => {
-      console.log('🔕 Cancelando suscripción a notificaciones');
+      log.info('🔕 Cancelando suscripción a notificaciones');
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
         unsubscribeRef.current = null;

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Request } from '@/types/request.types';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';

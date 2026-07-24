@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORIES, CATEGORY_OPTIONS } from '@/lib/constants/categories';
@@ -82,7 +83,7 @@ export const MessageFormModal = ({
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error:', error);
+      log.error('Error:', error);
       toast.error('Error al enviar el mensaje');
     } finally {
       setLoading(false);

@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { LucideIcon } from 'lucide-react';
 import Link from 'next/link';

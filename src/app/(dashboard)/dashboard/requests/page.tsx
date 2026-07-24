@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { RequestFilters } from '@/components/dashboard/requests/RequestFilters';
 import { RequestList } from '@/components/dashboard/requests/RequestList';
@@ -24,7 +25,7 @@ export default function RequestsPage() {
       const data = await getFilteredRequests(user.uid, currentRole || 'client', filters);
       setRequests(data);
     } catch (error) {
-      console.error('Error cargando solicitudes:', error);
+      log.error('Error cargando solicitudes:', error);
     } finally {
       setLoading(false);
     }

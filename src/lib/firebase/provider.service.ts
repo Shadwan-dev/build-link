@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { Review } from '@/types/review.types';
 import {
   collection,
@@ -99,7 +100,7 @@ export const getProviders = async (options?: {
 
     return { providers, lastDoc: lastVisible };
   } catch (error) {
-    console.error('Error obteniendo proveedores verificados:', error);
+    log.error('Error obteniendo proveedores verificados:', error);
     return { providers: [], lastDoc: null };
   }
 };
@@ -140,7 +141,7 @@ export const getProvidersByCategory = async (
 
     return { providers, lastDoc: lastVisible };
   } catch (error) {
-    console.error('Error obteniendo proveedores por categoría:', error);
+    log.error('Error obteniendo proveedores por categoría:', error);
     return { providers: [], lastDoc: null };
   }
 };
@@ -159,7 +160,7 @@ export const getProviderById = async (uid: string): Promise<Provider | null> => 
     }
     return null;
   } catch (error) {
-    console.error('Error obteniendo proveedor:', error);
+    log.error('Error obteniendo proveedor:', error);
     return null;
   }
 };
@@ -190,7 +191,7 @@ export const searchProviders = async (
 
     return { providers: filtered, lastDoc: result.lastDoc };
   } catch (error) {
-    console.error('Error buscando proveedores:', error);
+    log.error('Error buscando proveedores:', error);
     return { providers: [], lastDoc: null };
   }
 };
@@ -219,7 +220,7 @@ export const getFeaturedProviders = async (limitCount: number = 3): Promise<Prov
 
     return providers;
   } catch (error) {
-    console.error('Error obteniendo proveedores destacados:', error);
+    log.error('Error obteniendo proveedores destacados:', error);
     return [];
   }
 };
@@ -236,7 +237,7 @@ export const updateProvider = async (uid: string, data: Partial<Provider>): Prom
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error actualizando proveedor:', error);
+    log.error('Error actualizando proveedor:', error);
     throw new Error('Error al actualizar proveedor');
   }
 };
@@ -283,11 +284,11 @@ export const updateProviderRating = async (providerId: string): Promise<void> =>
       updatedAt: serverTimestamp(),
     });
 
-    console.log(
+    log.info(
       `✅ Rating actualizado para proveedor ${providerId}: ${averageRating.toFixed(1)} (${reviews.length} valoraciones)`
     );
   } catch (error) {
-    console.error('❌ Error actualizando rating:', error);
+    log.error('❌ Error actualizando rating:', error);
     throw new Error('Error al actualizar el rating');
   }
 };
@@ -310,7 +311,7 @@ export const getAllProviders = async (): Promise<Provider[]> => {
 
     return providers;
   } catch (error) {
-    console.error('Error obteniendo todos los proveedores:', error);
+    log.error('Error obteniendo todos los proveedores:', error);
     return [];
   }
 };
@@ -337,7 +338,7 @@ export const getPendingProviders = async (): Promise<Provider[]> => {
 
     return providers;
   } catch (error) {
-    console.error('Error obteniendo proveedores pendientes:', error);
+    log.error('Error obteniendo proveedores pendientes:', error);
     return [];
   }
 };
@@ -409,7 +410,7 @@ export const getProvidersWithFilters = async (
 
     return { providers: filteredProviders, lastDoc: lastVisible };
   } catch (error) {
-    console.error('Error obteniendo proveedores con filtros:', error);
+    log.error('Error obteniendo proveedores con filtros:', error);
     return { providers: [], lastDoc: null };
   }
 };

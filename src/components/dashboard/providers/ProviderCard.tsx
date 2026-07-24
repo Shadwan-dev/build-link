@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { Provider } from '@/lib/firebase/provider.service';
 import {

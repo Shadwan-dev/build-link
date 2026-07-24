@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 import { formatearIdentificacion, validarIdentificacion } from '@/lib/utils/validacion';
 import { useCallback, useEffect, useState } from 'react';
 

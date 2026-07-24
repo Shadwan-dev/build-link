@@ -1,3 +1,4 @@
+import { log } from '@/lib/utils/logger';
 // components/auth/TermsAndConditions.tsx
 export const TermsAndConditions = () => (
   <div className="space-y-4 text-sm text-gray-600">

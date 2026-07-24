@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
@@ -16,7 +17,7 @@ export default function AuthCallbackPage() {
         // Si todo sale bien, redirigir al dashboard
         router.push('/dashboard');
       } catch (error) {
-        console.error('Error en callback de autenticación:', error);
+        log.error('Error en callback de autenticación:', error);
         router.push('/login');
       }
     };

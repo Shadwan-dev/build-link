@@ -1,4 +1,5 @@
 'use client';
+import { log } from '@/lib/utils/logger';
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
@@ -28,7 +29,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       const savedRole = localStorage.getItem('user-role');
       if (savedRole === 'client' || savedRole === 'provider') {
-        console.log('📝 Rol cargado de localStorage:', savedRole);
+        log.info('📝 Rol cargado de localStorage:', savedRole);
         return savedRole;
       }
     }
@@ -37,7 +38,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
   const loadRole = useCallback(async () => {
     if (user) {
-      console.log('📝 Usuario cargado desde Auth:', user.role);
+      log.info('📝 Usuario cargado desde Auth:', user.role);
 
       if (user.role === 'client' || user.role === 'provider') {
         setCurrentRole(user.role);
@@ -74,25 +75,25 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
       setIsLoading(true);
       try {
-        console.log(`🔄 Actualizando rol a: ${role}`);
+        log.info(`🔄 Actualizando rol a: ${role}`);
 
         setCurrentRole(role);
         localStorage.setItem('user-role', role);
 
         try {
           await updateUser({ role });
-          console.log(`✅ Rol guardado en Firestore: ${role}`);
+          log.info(`✅ Rol guardado en Firestore: ${role}`);
         } catch (firestoreError) {
-          console.warn(
+          log.warning(
             '⚠️ No se pudo guardar en Firestore, pero el rol local está guardado:',
             firestoreError
           );
         }
 
         await refreshUser();
-        console.log(`✅ Rol actualizado a: ${role}`);
+        log.info(`✅ Rol actualizado a: ${role}`);
       } catch (error) {
-        console.error('❌ Error al actualizar rol:', error);
+        log.error('❌ Error al actualizar rol:', error);
         const savedRole = loadRoleFromStorage();
         setCurrentRole(savedRole);
         throw error;
@@ -112,7 +113,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoading(true);
     try {
-      console.log(`🔄 Cambiando rol de ${currentRole} a ${newRole}...`);
+      log.info(`🔄 Cambiando rol de ${currentRole} a ${newRole}...`);
 
       // ✅ 1. Actualizar el rol en el estado local (inmediato)
       setCurrentRole(newRole);
@@ -121,9 +122,9 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       // ✅ 2. Intentar actualizar en Firestore
       try {
         await updateUser({ role: newRole });
-        console.log(`✅ Rol actualizado en Firestore: ${newRole}`);
+        log.info(`✅ Rol actualizado en Firestore: ${newRole}`);
       } catch (firestoreError) {
-        console.warn('⚠️ No se pudo actualizar en Firestore:', firestoreError);
+        log.warning('⚠️ No se pudo actualizar en Firestore:', firestoreError);
         // Si Firestore falla, ya tenemos el rol en localStorage
       }
 
@@ -133,9 +134,9 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       // ✅ 4. Notificar cambio
       window.dispatchEvent(new Event('role-changed'));
 
-      console.log(`✅ Cambio de rol completado a: ${newRole}`);
+      log.info(`✅ Cambio de rol completado a: ${newRole}`);
     } catch (error) {
-      console.error('❌ Error cambiando rol:', error);
+      log.error('❌ Error cambiando rol:', error);
       // Revertir estado local
       setCurrentRole(currentRole);
       localStorage.setItem('user-role', currentRole);
