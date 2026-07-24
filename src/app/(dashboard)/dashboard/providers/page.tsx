@@ -16,9 +16,10 @@ export default function ProvidersPage() {
     const loadProviders = async () => {
       setLoading(true);
       try {
-        const data = await getProviders();
-        setProviders(data);
-        setFilteredProviders(data);
+        // ✅ getProviders ahora devuelve { providers, lastDoc }
+        const result = await getProviders({ limitCount: 50 });
+        setProviders(result.providers);
+        setFilteredProviders(result.providers);
       } catch (error) {
         console.error('Error cargando proveedores:', error);
       } finally {
@@ -82,7 +83,7 @@ export default function ProvidersPage() {
         variant="compact"
         emptyMessage={
           searchTerm || selectedCategory
-            ? 'No se encontraron proveedores'
+            ? 'No se encontraron proveedores con estos filtros'
             : 'Aún no hay proveedores registrados'
         }
       />

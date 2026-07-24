@@ -31,6 +31,9 @@ export const ProviderFilters = ({
 }: ProviderFiltersProps) => {
   const [showFilters, setShowFilters] = useState(false);
 
+  // ✅ Contar filtros activos
+  const activeFilters = (searchTerm ? 1 : 0) + (selectedCategory ? 1 : 0);
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
       <div className="flex flex-col sm:flex-row gap-3">
@@ -50,10 +53,19 @@ export const ProviderFilters = ({
         <div className="flex gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2 whitespace-nowrap"
+            className={`px-4 py-2 rounded-lg transition flex items-center gap-2 whitespace-nowrap ${
+              showFilters || activeFilters > 0
+                ? 'bg-primary-600 text-white hover:bg-primary-700'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             {showFilters ? 'Ocultar filtros' : 'Mostrar filtros'}
+            {activeFilters > 0 && (
+              <span className="ml-1 bg-white/20 text-white text-xs px-1.5 py-0.5 rounded-full">
+                {activeFilters}
+              </span>
+            )}
           </button>
 
           {(searchTerm || selectedCategory) && (
@@ -71,9 +83,19 @@ export const ProviderFilters = ({
       {/* Filtros expandibles */}
       {showFilters && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Filtrar por categoría:
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Filtrar por categoría:
+            </p>
+            {selectedCategory && (
+              <button
+                onClick={() => onCategoryChange('')}
+                className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                Deseleccionar
+              </button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {ALL_CATEGORIES.map((category) => (
               <button
@@ -81,7 +103,7 @@ export const ProviderFilters = ({
                 onClick={() => onCategoryChange(selectedCategory === category ? '' : category)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                   selectedCategory === category
-                    ? 'bg-primary-600 text-white'
+                    ? 'bg-primary-600 text-white shadow-sm'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
