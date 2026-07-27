@@ -231,6 +231,7 @@ export const getPendingVerifications = async (): Promise<ProviderVerification[]>
 };
 
 // ✅ Verificación automática (sin necesidad de admin) - CORREGIDO
+// ✅ Verificación automática (sin necesidad de admin) - CORREGIDO
 export const autoVerifyProvider = async (uid: string, data: VerificationRequest): Promise<void> => {
   try {
     const dbInstance = getDb();
@@ -241,7 +242,7 @@ export const autoVerifyProvider = async (uid: string, data: VerificationRequest)
       ...data,
       country: data.country || 'CL',
       isVerified: true, // ✅ Automáticamente verificado
-      verificationStatus: 'approved' as const,
+      verificationStatus: 'approved' as const, // ✅ Cambiar a 'approved'
       verificationDate: serverTimestamp(),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),

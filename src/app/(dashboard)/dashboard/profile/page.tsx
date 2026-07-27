@@ -17,6 +17,7 @@ import {
   Building2,
   Camera,
   CheckCircle,
+  Clock,
   Loader2,
   Save,
   Shield,
@@ -34,7 +35,7 @@ export default function ProfilePage() {
   const [verification, setVerification] = useState<any>(null);
   const [requestingVerification, setRequestingVerification] = useState(false);
 
-  // ✅ Estado para verificación automática
+  // ✅ Estado para verificación - SOLO VISUAL
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
@@ -121,12 +122,12 @@ export default function ProfilePage() {
   }, [user, isProvider]);
 
   // ============================================
-  // VERIFICACIÓN AUTOMÁTICA - SE EJECUTA EN CADA CAMBIO
+  // VALIDACIÓN VISUAL (SOLO MUESTRA PROGRESO)
   // ============================================
   useEffect(() => {
     if (!isProvider) return;
 
-    // ✅ Calcular progreso y estado
+    // ✅ Calcular progreso - SOLO VISUAL
     const progress = getVerificationProgress(formData);
     setVerificationProgress(progress);
 
@@ -139,56 +140,7 @@ export default function ProfilePage() {
     } else {
       setMissingFields([]);
     }
-
-    // ✅ Si ya está verificado por admin, no hacer nada
-    if (verification?.verificationStatus === 'approved') return;
-
-    // ✅ Si está completo y no está pendiente, solicitar verificación automática
-    if (complete && verification?.verificationStatus !== 'pending') {
-      handleAutoVerify();
-    }
-  }, [formData, isProvider, verification]);
-
-  // ============================================
-  // VERIFICACIÓN AUTOMÁTICA - USANDO EL SERVICIO
-  // ============================================
-  const handleAutoVerify = useCallback(async () => {
-    if (!user || !isProvider) return;
-    if (!isComplete) return;
-    if (verification?.verificationStatus === 'approved') return;
-    if (verification?.verificationStatus === 'pending') return;
-
-    setRequestingVerification(true);
-    try {
-      // ✅ Usar la función importada
-      await autoVerifyProvider(user.uid, {
-        uid: user.uid,
-        displayName: formData.displayName || '',
-        email: user.email || '',
-        phone: formData.phone || '',
-        identification: formData.identification || '',
-        country: formData.country || 'CL',
-        legalName: formData.legalName || '',
-        address: formData.address || '',
-        specialties: formData.specialties || [],
-        experience: formData.experience || 0,
-        description: formData.description || '',
-      });
-
-      // ✅ Recargar estado de verificación
-      const updated = await getVerificationStatus(user.uid);
-      setVerification(updated);
-
-      toast.success('🎉 ¡Cuenta verificada automáticamente!', {
-        icon: '✅',
-      });
-    } catch (error: any) {
-      log.error('Error en verificación automática:', error);
-      toast.error('Error al verificar automáticamente');
-    } finally {
-      setRequestingVerification(false);
-    }
-  }, [user, isProvider, isComplete, formData, verification]);
+  }, [formData, isProvider]);
 
   // ============================================
   // HANDLERS
@@ -250,7 +202,10 @@ export default function ProfilePage() {
   }, []);
 
   // ============================================
-  // GUARDAR PERFIL
+  // GUARDAR Y VERIFICAR - UN SOLO PASO
+  // ============================================
+  // ============================================
+  // GUARDAR Y VERIFICAR - UN SOLO PASO
   // ============================================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,6 +218,7 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
+      // ✅ 1. Guardar perfil
       const updateData: ProfileData = {
         displayName: formData.displayName,
         phone: formData.phone,
@@ -282,6 +238,59 @@ export default function ProfilePage() {
 
       await updateUserProfile(user.uid, updateData, firebaseUser || undefined);
       await refreshUser();
+
+      // ✅ 2. Si es proveedor, verificar automáticamente después de guardar
+      if (isProvider) {
+        const complete = isProviderComplete(updateData);
+        if (complete) {
+          setRequestingVerification(true);
+          try {
+            await autoVerifyProvider(user.uid, {
+              uid: user.uid,
+              displayName: updateData.displayName || '',
+              email: user.email || '',
+              phone: updateData.phone || '',
+              identification: updateData.identification || '',
+              country: updateData.country || 'CL',
+              legalName: updateData.legalName || '',
+              address: updateData.address || '',
+              specialties: updateData.specialties || [],
+              experience: updateData.experience || 0,
+              description: updateData.description || '',
+            });
+
+            // ✅ Recargar estado de verificación
+            const updated = await getVerificationStatus(user.uid);
+            setVerification(updated);
+
+            if (updated?.verificationStatus === 'approved') {
+              toast.success('🎉 ¡Cuenta verificada automáticamente!', {
+                icon: '✅',
+                duration: 3000,
+              });
+            } else {
+              // ✅ CORREGIDO: usar toast en lugar de toast.info
+              toast('📋 Solicitud de verificación enviada', {
+                icon: '📋',
+                duration: 3000,
+              });
+            }
+          } catch (verifyError) {
+            log.error('Error en verificación automática:', verifyError);
+            toast.error('Perfil guardado, pero hubo un error en la verificación');
+          } finally {
+            setRequestingVerification(false);
+          }
+        } else {
+          // ✅ Si no está completo, mostrar qué falta
+          const missing = getMissingVerificationFields(updateData);
+          toast.error(
+            `⚠️ Completa los siguientes campos para verificar tu cuenta:\n${missing.join('\n')}`,
+            { duration: 5000 }
+          );
+        }
+      }
+
       toast.success('✅ Perfil actualizado correctamente');
     } catch (error) {
       log.error('Error:', error);
@@ -321,7 +330,7 @@ export default function ProfilePage() {
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
           {isProvider
-            ? 'Gestiona tu información profesional y solicita verificación'
+            ? 'Gestiona tu información profesional. Al guardar, se verificará automáticamente.'
             : 'Gestiona tu información personal'}
         </p>
       </div>
@@ -549,7 +558,7 @@ export default function ProfilePage() {
           </>
         )}
 
-        {/* ✅ BARRA DE PROGRESO DE VERIFICACIÓN - SOLO PARA PROVEEDORES */}
+        {/* ✅ BARRA DE PROGRESO DE VERIFICACIÓN - SOLO INFORMATIVA */}
         {isProvider && (
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
             <div className="flex items-center justify-between mb-2">
@@ -562,13 +571,13 @@ export default function ProfilePage() {
                   <CheckCircle className="w-4 h-4" />
                   Verificada ✓
                 </span>
-              ) : isComplete ? (
-                <span className="text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Verificando...
+              ) : verification?.verificationStatus === 'pending' ? (
+                <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
+                  <Clock className="w-4 h-4 animate-pulse" />
+                  Pendiente
                 </span>
               ) : (
-                <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
                   <AlertTriangle className="w-4 h-4" />
                   {verificationProgress}% completado
                 </span>
@@ -578,20 +587,25 @@ export default function ProfilePage() {
             {/* ✅ Barra de progreso */}
             <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-700 ${
+                className={`h-full rounded-full transition-all duration-500 ${
                   verification?.verificationStatus === 'approved'
                     ? 'bg-green-500'
-                    : isComplete
-                      ? 'bg-blue-500 animate-pulse'
-                      : 'bg-yellow-500'
+                    : verification?.verificationStatus === 'pending'
+                      ? 'bg-yellow-500'
+                      : 'bg-primary-500'
                 }`}
                 style={{
-                  width: `${verification?.verificationStatus === 'approved' ? 100 : verificationProgress}%`,
+                  width:
+                    verification?.verificationStatus === 'approved'
+                      ? 100
+                      : verification?.verificationStatus === 'pending'
+                        ? 100
+                        : verificationProgress,
                 }}
               />
             </div>
 
-            {/* ✅ Estado actual y campos faltantes */}
+            {/* ✅ Mensaje informativo */}
             {verification?.verificationStatus === 'approved' ? (
               <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
@@ -599,18 +613,24 @@ export default function ProfilePage() {
                   ¡Tu cuenta está verificada! Disfruta de todos los beneficios.
                 </p>
               </div>
-            ) : isComplete ? (
-              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Verificando automáticamente tu cuenta...
+            ) : verification?.verificationStatus === 'pending' ? (
+              <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                  <Clock className="w-4 h-4 animate-pulse" />
+                  Tu solicitud está en revisión. Te notificaremos cuando sea aprobada.
                 </p>
               </div>
             ) : (
-              <>
-                <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-2 flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4" />
-                  Completa todos los campos para verificación automática
+              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  {isComplete ? (
+                    <span className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />✅ Todos los campos
+                      completos. Guarda para verificar tu cuenta.
+                    </span>
+                  ) : (
+                    <span>⚠️ Completa todos los campos para verificar tu cuenta al guardar.</span>
+                  )}
                 </p>
                 {missingFields.length > 0 && (
                   <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200 dark:border-yellow-800">
@@ -627,7 +647,7 @@ export default function ProfilePage() {
                     </ul>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         )}
@@ -636,18 +656,18 @@ export default function ProfilePage() {
         <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || requestingVerification}
             className="flex-1 px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {saving ? (
+            {saving || requestingVerification ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Guardando...
+                {saving ? 'Guardando...' : 'Verificando...'}
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Guardar cambios
+                Guardar y verificar
               </>
             )}
           </button>

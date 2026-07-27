@@ -326,7 +326,7 @@ self.__SERVER_FILES_MANIFEST={
     ".next\\server\\next-font-manifest.js",
     ".next\\server\\next-font-manifest.json",
     ".next\\required-server-files.json",
-    ".next\\static\\chunks\\21525689a6aa1c2d.css"
+    ".next\\static\\chunks\\df5bd88b5483f8aa.css"
   ],
   "ignore": []
 }
