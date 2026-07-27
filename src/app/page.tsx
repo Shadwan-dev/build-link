@@ -1,8 +1,7 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
 import { BackgroundCarousel } from '@/components/common/BackgroundCarousel';
-import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
+import { MiMaestroLogo } from '@/components/common/MiMaestroLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowRight, Building2, Hammer, Home, Loader2, Star, Users, Wrench } from 'lucide-react';
 import Link from 'next/link';
@@ -47,7 +46,7 @@ export default function HomePage() {
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
           {/* Logo Grande con efecto de brillo */}
           <div className="mb-8 filter drop-shadow-[0_0_30px_rgba(37,99,235,0.2)] hover:drop-shadow-[0_0_50px_rgba(37,99,235,0.3)] transition-all duration-300">
-            <BuildLinkLogo size="2xl" showTagline={true} />
+            <MiMaestroLogo size="2xl" showTagline={true} />
           </div>
 
           {/* Título principal */}
@@ -131,7 +130,7 @@ export default function HomePage() {
 
         {/* Footer */}
         <footer className="mt-20 pt-8 border-t border-white/20 text-center text-sm text-white/70">
-          <p>© 2026 BuildLink. Todos los derechos reservados.</p>
+          <p>© 2026 MiMaestro. Todos los derechos reservados.</p>
           <div className="mt-2 space-x-4">
             <Link href="/terms" className="hover:text-white transition">
               Términos

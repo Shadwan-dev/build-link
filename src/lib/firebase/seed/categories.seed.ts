@@ -12,7 +12,7 @@ export const DEFAULT_CATEGORIES: Omit<Category, 'id' | 'createdAt' | 'updatedAt'
     order: 1,
     isActive: true,
     metadata: {
-      seoTitle: 'Servicios de Construcción | BuildLink',
+      seoTitle: 'Servicios de Construcción | MiMaestro',
       seoDescription: 'Encuentra los mejores profesionales en construcción',
       keywords: ['construcción', 'obra', 'edificación'],
     },
@@ -26,7 +26,7 @@ export const DEFAULT_CATEGORIES: Omit<Category, 'id' | 'createdAt' | 'updatedAt'
     order: 2,
     isActive: true,
     metadata: {
-      seoTitle: 'Servicios de Carpintería | BuildLink',
+      seoTitle: 'Servicios de Carpintería | MiMaestro',
       seoDescription: 'Encuentra los mejores carpinteros',
       keywords: ['carpintería', 'muebles', 'madera'],
     },

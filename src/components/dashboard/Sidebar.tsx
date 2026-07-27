@@ -1,7 +1,7 @@
 'use client';
 import { log } from '@/lib/utils/logger';
 
-import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
+import { MiMaestroLogo } from '@/components/common/MiMaestroLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import {
@@ -15,7 +15,6 @@ import {
   Lock,
   LogOut,
   Menu,
-  MessageSquare,
   RefreshCw,
   Settings,
   Shield,
@@ -37,12 +36,6 @@ const baseLinks = [
 const clientLinks = [
   { href: '/dashboard/providers', icon: Users, label: 'Proveedores', roles: ['client'] },
   { href: '/dashboard/requests', icon: FileText, label: 'Mis Solicitudes', roles: ['client'] },
-  {
-    href: '/dashboard/messages',
-    icon: MessageSquare,
-    label: 'Mensajes',
-    roles: ['client', 'provider'],
-  },
   {
     href: '/dashboard/profile',
     icon: UserCircle,
@@ -68,12 +61,6 @@ const providerLinks = [
   { href: '/dashboard/requests', icon: FileText, label: 'Solicitudes', roles: ['provider'] },
   { href: '/dashboard/jobs', icon: Briefcase, label: 'Mis Ofertas', roles: ['provider'] },
   { href: '/dashboard/stats', icon: BarChart3, label: 'Estadísticas', roles: ['provider'] },
-  {
-    href: '/dashboard/messages',
-    icon: MessageSquare,
-    label: 'Mensajes',
-    roles: ['client', 'provider'],
-  },
   {
     href: '/dashboard/profile',
     icon: UserCircle,
@@ -343,7 +330,7 @@ export const Sidebar = ({ isCollapsed = false, onToggle, isDisabled = false }: S
       >
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <BuildLinkLogo size="md" />
+            <MiMaestroLogo size="md" />
             <button
               onClick={() => setIsMobileOpen(false)}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"

@@ -78,7 +78,7 @@ export default function StatsPage() {
           📊 Estadísticas
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Analiza el rendimiento de tu negocio en BuildLink
+          Analiza el rendimiento de tu negocio en MiMaestro
         </p>
       </div>
 

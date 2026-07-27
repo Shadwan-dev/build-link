@@ -5,8 +5,6 @@
   "/(dashboard)/dashboard/jobs/[id]/edit/page": "app/(dashboard)/dashboard/jobs/[id]/edit/page.js",
   "/(dashboard)/dashboard/jobs/new/page": "app/(dashboard)/dashboard/jobs/new/page.js",
   "/(dashboard)/dashboard/jobs/page": "app/(dashboard)/dashboard/jobs/page.js",
-  "/(dashboard)/dashboard/messages/[id]/page": "app/(dashboard)/dashboard/messages/[id]/page.js",
-  "/(dashboard)/dashboard/messages/page": "app/(dashboard)/dashboard/messages/page.js",
   "/(dashboard)/dashboard/notifications/page": "app/(dashboard)/dashboard/notifications/page.js",
   "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
   "/(dashboard)/dashboard/profile/page": "app/(dashboard)/dashboard/profile/page.js",

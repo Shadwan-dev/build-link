@@ -30,6 +30,12 @@ export interface Request {
   estimatedTime?: string;
   images?: string[];
 
+  clientEmail?: string;
+  clientPhone?: string;
+
+  providerSpecialty?: string; // ✅ Especialidad buscada
+  providerLocation?: string; // ✅ Ubicación buscada
+
   // ✅ Campos adicionales para tracking
   providerResponse?: {
     message: string;
@@ -47,6 +53,9 @@ export interface Request {
 
 // ✅ SOLO AÑADE estas interfaces adicionales (no elimines nada)
 
+// ============================================
+// 📝 DATOS PARA CREAR UNA SOLICITUD (INPUT)
+// ============================================
 // ============================================
 // 📝 DATOS PARA CREAR UNA SOLICITUD (INPUT)
 // ============================================
@@ -68,6 +77,12 @@ export interface CreateRequestInput {
   timeline?: string;
   estimatedTime?: string;
   images?: string[];
+  // ✅ Campos para filtros de proveedores
+  providerSpecialty?: string;
+  providerLocation?: string;
+  // ✅ NUEVOS CAMPOS DE UBICACIÓN
+  regionId?: string;
+  provinceId?: string;
 }
 
 // ============================================

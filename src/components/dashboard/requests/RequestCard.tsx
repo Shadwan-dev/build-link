@@ -1,11 +1,11 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
 import { Request } from '@/types/request.types';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import { es } from 'date-fns/locale/es';
 import { CheckCircle, Clock, DollarSign, MapPin, User, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { DeleteRequestButton } from './DeleteRequestButton';
 
 interface RequestCardProps {
   request: Request;
@@ -14,8 +14,17 @@ interface RequestCardProps {
   showActions?: boolean;
 }
 
-export const RequestCard = ({ request, onStatusChange, showActions = false }: RequestCardProps) => {
+export const RequestCard = ({
+  request,
+  role,
+  onStatusChange,
+  showActions = false,
+}: RequestCardProps) => {
   const router = useRouter();
+
+  // ✅ Determinar si es proveedor basado en el role
+  const isProvider = role === 'provider';
+  const isClient = role === 'client';
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -67,9 +76,12 @@ export const RequestCard = ({ request, onStatusChange, showActions = false }: Re
     router.push(`/dashboard/requests/${request.id}`);
   };
 
+  // ✅ Solo mostrar botón de eliminar si es cliente y está pendiente
+  const showDeleteButton = isClient && request.status === 'pendiente';
+
   return (
     <div
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all p-4 md:p-6 cursor-pointer"
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all p-4 md:p-6 cursor-pointer relative"
       onClick={handleCardClick}
     >
       {/* Header */}
@@ -94,6 +106,8 @@ export const RequestCard = ({ request, onStatusChange, showActions = false }: Re
             {request.description}
           </p>
         </div>
+
+        {/* ✅ Acciones para proveedor (Aceptar/Rechazar) */}
         {showActions && request.status === 'pendiente' && onStatusChange && (
           <div className="flex gap-2 flex-shrink-0">
             <button
@@ -116,6 +130,20 @@ export const RequestCard = ({ request, onStatusChange, showActions = false }: Re
               <XCircle className="w-4 h-4" />
               Rechazar
             </button>
+          </div>
+        )}
+
+        {/* ✅ Botón de eliminar para cliente (solo pendiente) */}
+        {showDeleteButton && (
+          <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <DeleteRequestButton
+              requestId={request.id}
+              onDeleted={() => {
+                window.location.reload();
+              }}
+              variant="icon"
+              className="hover:bg-red-100 dark:hover:bg-red-900/30"
+            />
           </div>
         )}
       </div>

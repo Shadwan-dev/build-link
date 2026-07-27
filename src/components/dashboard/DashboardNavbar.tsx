@@ -1,7 +1,6 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
-import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
+import { MiMaestroLogo } from '@/components/common/MiMaestroLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
@@ -67,7 +66,7 @@ export const DashboardNavbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center group flex-shrink-0">
-            <BuildLinkLogo size="md" />
+            <MiMaestroLogo size="md" />
           </Link>
 
           {/* Links Desktop */}

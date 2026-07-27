@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const user = await handleGoogleRedirect();
           if (user) {
             await redirectAfterAuth(user);
-            toast.success('¡Bienvenido a BuildLink con Google!');
+            toast.success('¡Bienvenido a MiMaestro con Google!');
           }
         } catch (error: any) {
           log.error('Error en redirect de Google:', error);
@@ -211,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       const firebaseUser = await loginUser(email, password);
       await redirectAfterAuth(firebaseUser);
-      toast.success('¡Bienvenido a BuildLink!');
+      toast.success('¡Bienvenido a MiMaestro!');
     } catch (error: any) {
       log.error('Error en login:', error);
       let errorMessage = error.message || 'Error al iniciar sesión';
@@ -242,7 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       log.info('✅ Usuario autenticado con Google:', user.uid);
 
       await redirectAfterAuth(user);
-      toast.success('¡Bienvenido a BuildLink con Google!');
+      toast.success('¡Bienvenido a MiMaestro con Google!');
     } catch (error: any) {
       log.error('Error en login con Google:', error);
 
@@ -287,7 +287,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const user = await handleGoogleRedirect();
       if (user) {
         await redirectAfterAuth(user);
-        toast.success('¡Bienvenido a BuildLink con Google!');
+        toast.success('¡Bienvenido a MiMaestro con Google!');
       }
     } catch (error: any) {
       toast.error(error.message || 'Error al procesar autenticación');

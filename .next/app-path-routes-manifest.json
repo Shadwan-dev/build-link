@@ -5,8 +5,6 @@
   "/(dashboard)/dashboard/jobs/[id]/edit/page": "/dashboard/jobs/[id]/edit",
   "/(dashboard)/dashboard/jobs/new/page": "/dashboard/jobs/new",
   "/(dashboard)/dashboard/jobs/page": "/dashboard/jobs",
-  "/(dashboard)/dashboard/messages/[id]/page": "/dashboard/messages/[id]",
-  "/(dashboard)/dashboard/messages/page": "/dashboard/messages",
   "/(dashboard)/dashboard/notifications/page": "/dashboard/notifications",
   "/(dashboard)/dashboard/page": "/dashboard",
   "/(dashboard)/dashboard/profile/page": "/dashboard/profile",

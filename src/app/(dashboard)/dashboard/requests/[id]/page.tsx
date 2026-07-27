@@ -1,14 +1,16 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
-import { RequestForm } from '@/components/dashboard/requests/RequestForm';
+import { DeleteRequestButton } from '@/components/dashboard/requests/DeleteRequestButton';
+import { WhatsAppContact } from '@/components/dashboard/requests/WhatsAppContact';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import { getRequestById, updateRequestStatus } from '@/lib/firebase/requests.service';
+import { log } from '@/lib/utils/logger';
 import { Request } from '@/types/request.types';
 import {
   AlertCircle,
   ArrowLeft,
+  Calendar,
   CheckCircle,
   Clock,
   DollarSign,
@@ -34,7 +36,6 @@ export default function RequestDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [responseText, setResponseText] = useState('');
   const [whatsappContact, setWhatsappContact] = useState('');
-  const [showRequestForm, setShowRequestForm] = useState(false);
 
   const requestId = params.id as string;
 
@@ -62,7 +63,7 @@ export default function RequestDetailPage() {
     loadRequest();
   }, [requestId]);
 
-  // Actualizar estado de la solicitud
+  // ✅ ACTUALIZAR ESTADO DE LA SOLICITUD
   const handleStatusUpdate = async (status: 'aceptado' | 'rechazado') => {
     if (!request) return;
 
@@ -89,7 +90,7 @@ export default function RequestDetailPage() {
     }
   };
 
-  // Funciones de utilidad
+  // ✅ FUNCIONES DE UTILIDAD
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pendiente':
@@ -126,15 +127,26 @@ export default function RequestDetailPage() {
   const getUrgencyLabel = (urgency: string) => {
     switch (urgency) {
       case 'urgente':
-        return 'Urgente';
+        return '🟡 Urgente';
       case 'muy-urgente':
-        return 'Muy urgente';
+        return '🔴 Muy urgente';
       default:
-        return 'Normal';
+        return '🟢 Normal';
     }
   };
 
-  // Estados de carga
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'urgente':
+        return 'text-yellow-600 dark:text-yellow-400';
+      case 'muy-urgente':
+        return 'text-red-600 dark:text-red-400';
+      default:
+        return 'text-gray-500 dark:text-gray-400';
+    }
+  };
+
+  // ✅ ESTADOS DE CARGA
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -159,7 +171,6 @@ export default function RequestDetailPage() {
     );
   }
 
-  // Determinar si el usuario actual es el cliente de esta solicitud
   const isClient = user?.uid === request.clientId;
   const isProvider = user?.uid === request.providerId;
 
@@ -190,7 +201,9 @@ export default function RequestDetailPage() {
                   {getStatusLabel(request.status)}
                 </span>
                 {request.urgency && (
-                  <span className="text-sm flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                  <span
+                    className={`text-sm flex items-center gap-1 ${getUrgencyColor(request.urgency)}`}
+                  >
                     <AlertCircle className="w-4 h-4" />
                     {getUrgencyLabel(request.urgency)}
                   </span>
@@ -214,7 +227,7 @@ export default function RequestDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                {isClient ? 'Proveedor' : 'Cliente'}
+                {isClient ? '🧑‍💼 Proveedor' : '👤 Cliente'}
               </p>
               <div className="mt-2 space-y-2">
                 <p className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
@@ -224,19 +237,21 @@ export default function RequestDetailPage() {
                 <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Mail className="w-4 h-4 text-gray-400" />
                   {isClient
-                    ? 'proveedor@email.com'
-                    : (request as any).clientEmail || 'cliente@email.com'}
+                    ? request.clientEmail || 'cliente@email.com'
+                    : request.clientEmail || 'cliente@email.com'}
                 </p>
                 <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Phone className="w-4 h-4 text-gray-400" />
-                  {isClient ? '+34 600 000 000' : (request as any).clientPhone || '+34 600 000 000'}
+                  {isClient
+                    ? request.clientPhone || '+34 600 000 000'
+                    : request.clientPhone || '+34 600 000 000'}
                 </p>
               </div>
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Detalles del proyecto
+                📋 Detalles del proyecto
               </p>
               <div className="mt-2 space-y-2">
                 {request.budget && (
@@ -247,14 +262,21 @@ export default function RequestDetailPage() {
                 )}
                 {request.location && (
                   <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                    <AlertCircle className="w-4 h-4 text-gray-400" />
-                    {request.location}
+                    📍 {request.location}
                   </p>
                 )}
                 {request.urgency && (
-                  <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                    <Clock className="w-4 h-4 text-gray-400" />
+                  <p
+                    className={`flex items-center gap-2 text-sm ${getUrgencyColor(request.urgency)}`}
+                  >
+                    <Clock className="w-4 h-4" />
                     {getUrgencyLabel(request.urgency)}
+                  </p>
+                )}
+                {request.estimatedTime && (
+                  <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    Tiempo estimado: {request.estimatedTime}
                   </p>
                 )}
               </div>
@@ -264,34 +286,34 @@ export default function RequestDetailPage() {
           {/* Descripción */}
           <div>
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Descripción del proyecto
+              📝 Descripción del proyecto
             </h3>
             <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
               {request.description}
             </p>
           </div>
 
-          {/* Respuesta del proveedor */}
-          {(request as any).response && (
+          {/* ✅ Respuesta del proveedor - CORREGIDO (if con paréntesis) */}
+          {request.response && (
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Respuesta del proveedor
+                💬 Respuesta del proveedor
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">{(request as any).response}</p>
-              {(request as any).whatsappContact && (
+              <p className="text-gray-600 dark:text-gray-400">{request.response}</p>
+              {request.whatsappContact && (
                 <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
                   <Phone className="w-4 h-4" />
-                  Contacto: {(request as any).whatsappContact}
+                  Contacto: {request.whatsappContact}
                 </p>
               )}
             </div>
           )}
 
-          {/* Acciones para proveedor */}
+          {/* ✅ ACCIONES PARA PROVEEDOR */}
           {isProvider && request.status === 'pendiente' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                Responder a la solicitud
+                📩 Responder a la solicitud
               </h3>
               <div className="space-y-4">
                 <textarea
@@ -338,12 +360,16 @@ export default function RequestDetailPage() {
             </div>
           )}
 
-          {/* Estado para cliente */}
+          {/* ✅ ESTADO PARA CLIENTE */}
           {isClient && request.status !== 'pendiente' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <p
-                  className={`font-medium ${request.status === 'aceptado' || request.status === 'completado' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                  className={`font-medium ${
+                    request.status === 'aceptado' || request.status === 'completado'
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
                 >
                   {request.status === 'aceptado' || request.status === 'completado' ? (
                     <>✅ El proveedor ha aceptado tu solicitud</>
@@ -353,41 +379,58 @@ export default function RequestDetailPage() {
                     <>📋 Tu solicitud está en proceso</>
                   )}
                 </p>
-                {(request as any).response && (
+                {request.response && (
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                    <span className="font-medium">Respuesta:</span> {(request as any).response}
+                    <span className="font-medium">Respuesta:</span> {request.response}
                   </p>
                 )}
-                {(request as any).whatsappContact && (
+                {request.whatsappContact && (
                   <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
                     <Phone className="w-4 h-4" />
-                    Contacto del proveedor: {(request as any).whatsappContact}
+                    Contacto del proveedor: {request.whatsappContact}
                   </p>
                 )}
               </div>
             </div>
           )}
-
-          {/* Botón de contacto (si está aceptado) */}
-          {request.status === 'aceptado' && (request as any).whatsappContact && (
+          {isClient && request.status === 'pendiente' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <a
-                href={`https://wa.me/${(request as any).whatsappContact.replace(/\s/g, '').replace('+', '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-              >
-                <Send className="w-4 h-4" />
-                Contactar por WhatsApp
-              </a>
+              <div className="flex gap-3">
+                <DeleteRequestButton
+                  requestId={request.id}
+                  onDeleted={() => {
+                    toast.success('Solicitud eliminada');
+                    router.push('/dashboard/requests');
+                  }}
+                  variant="button"
+                />
+              </div>
             </div>
           )}
 
-          {/* Botón para crear nueva solicitud */}
+          {/* ✅ CONTACTO WHATSAPP - PARA CLIENTE CUANDO LA SOLICITUD ESTÁ ACEPTADA */}
+          {isClient && request.status === 'aceptado' && request.whatsappContact && (
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <WhatsAppContact
+                request={request}
+                clientName={user?.displayName || 'Cliente'}
+                providerPhone={request.whatsappContact}
+                providerName={request.providerName}
+              />
+            </div>
+          )}
+
+          {/* ✅ Botón para crear nueva solicitud (solo clientes) */}
           {isClient && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <button
-                onClick={() => setShowRequestForm(true)}
+                onClick={() => {
+                  toast('Redirigiendo al formulario de nueva solicitud', {
+                    icon: '📝',
+                    duration: 2000,
+                  });
+                  router.push('/dashboard/requests/new');
+                }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
               >
                 <Send className="w-4 h-4" />
@@ -397,20 +440,6 @@ export default function RequestDetailPage() {
           )}
         </div>
       </div>
-
-      {/* Modal del formulario de solicitud */}
-      {showRequestForm && request && (
-        <RequestForm
-          providerId={request.providerId}
-          providerName={request.providerName}
-          onClose={() => setShowRequestForm(false)}
-          onSuccess={() => {
-            toast.success('✅ Solicitud enviada correctamente');
-            setShowRequestForm(false);
-            router.push('/dashboard/requests');
-          }}
-        />
-      )}
     </div>
   );
 }

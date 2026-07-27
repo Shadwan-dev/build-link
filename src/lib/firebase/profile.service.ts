@@ -21,11 +21,14 @@ export interface ProfileData {
   identification?: string;
   legalName?: string;
   address?: string;
-  // ✅ AÑADIR estos campos para la validación
+  // ✅ Campos para la validación
   country?: string;
   identificationValid?: boolean;
   verificationStatus?: 'not_requested' | 'pending' | 'approved' | 'rejected';
   verificationNotes?: string;
+  // ✅ NUEVOS CAMPOS DE UBICACIÓN (CHILE)
+  regionId?: string;
+  provinceId?: string;
 }
 
 // ✅ Obtener perfil de usuario - CON TODOS LOS CAMPOS
@@ -45,6 +48,9 @@ export const getUserProfile = async (uid: string): Promise<any> => {
         identificationValid: data.identificationValid || false,
         verificationStatus: data.verificationStatus || 'not_requested',
         verificationNotes: data.verificationNotes || '',
+        // ✅ NUEVOS CAMPOS
+        regionId: data.regionId || '',
+        provinceId: data.provinceId || '',
       };
     }
     return null;
@@ -79,6 +85,9 @@ export const updateUserProfile = async (
       // ✅ Incluir campos de validación
       country: data.country || 'CL',
       identificationValid: data.identificationValid || false,
+      // ✅ NUEVOS CAMPOS DE UBICACIÓN
+      regionId: data.regionId || '',
+      provinceId: data.provinceId || '',
       updatedAt: serverTimestamp(),
     };
 
@@ -124,6 +133,9 @@ export const updateUserProfile = async (
           address: data.address || '',
           country: data.country || 'CL',
           identificationValid: data.identificationValid || false,
+          // ✅ NUEVOS CAMPOS EN PROVIDER TAMBIÉN
+          regionId: data.regionId || '',
+          provinceId: data.provinceId || '',
           updatedAt: serverTimestamp(),
         });
       }

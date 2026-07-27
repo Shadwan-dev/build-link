@@ -75,14 +75,6 @@
       "namedRegex": "^/dashboard/jobs/(?<nxtPid>[^/]+?)/edit(?:/)?$"
     },
     {
-      "page": "/dashboard/messages/[id]",
-      "regex": "^/dashboard/messages/([^/]+?)(?:/)?$",
-      "routeKeys": {
-        "nxtPid": "nxtPid"
-      },
-      "namedRegex": "^/dashboard/messages/(?<nxtPid>[^/]+?)(?:/)?$"
-    },
-    {
       "page": "/dashboard/providers/[uid]",
       "regex": "^/dashboard/providers/([^/]+?)(?:/)?$",
       "routeKeys": {
@@ -147,12 +139,6 @@
       "regex": "^/dashboard/jobs/new(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/dashboard/jobs/new(?:/)?$"
-    },
-    {
-      "page": "/dashboard/messages",
-      "regex": "^/dashboard/messages(?:/)?$",
-      "routeKeys": {},
-      "namedRegex": "^/dashboard/messages(?:/)?$"
     },
     {
       "page": "/dashboard/notifications",

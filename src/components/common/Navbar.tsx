@@ -1,5 +1,4 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
@@ -23,7 +22,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { BuildLinkLogo } from './BuildLinkLogo';
+import { MiMaestroLogo } from './MiMaestroLogo';
 import { NotificationBell } from './NotificationBell';
 
 export const Navbar = () => {
@@ -134,7 +133,7 @@ export const Navbar = () => {
             href="/dashboard"
             className="flex items-center group flex-shrink-0 transition-opacity hover:opacity-80"
           >
-            <BuildLinkLogo size="md" />
+            <MiMaestroLogo size="md" />
           </Link>
 
           {/* ✅ Links Desktop */}

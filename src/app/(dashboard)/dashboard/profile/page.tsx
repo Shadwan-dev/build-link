@@ -1,23 +1,26 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
 import { IdentificationValidator } from '@/components/profile/IdentificationValidator';
+import { RegionSelector } from '@/components/ui/RegionSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import { getUserProfile, ProfileData, updateUserProfile } from '@/lib/firebase/profile.service';
-import { getVerificationStatus, requestVerification } from '@/lib/firebase/verification.service';
+import { autoVerifyProvider, getVerificationStatus } from '@/lib/firebase/verification.service';
+import { log } from '@/lib/utils/logger';
 import {
-  AlertCircle,
+  getMissingVerificationFields,
+  getVerificationProgress,
+  isProviderComplete,
+} from '@/lib/utils/provider-verification';
+import {
+  AlertTriangle,
   Building2,
   Camera,
   CheckCircle,
-  Clock,
   Loader2,
-  MapPin,
   Save,
   Shield,
   User,
-  XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -30,6 +33,11 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
   const [requestingVerification, setRequestingVerification] = useState(false);
+
+  // ✅ Estado para verificación automática
+  const [verificationProgress, setVerificationProgress] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<ProfileData>({
     displayName: '',
@@ -44,6 +52,8 @@ export default function ProfilePage() {
     address: '',
     country: 'CL',
     identificationValid: false,
+    regionId: '',
+    provinceId: '',
   });
 
   const [identificationState, setIdentificationState] = useState({
@@ -85,6 +95,8 @@ export default function ProfilePage() {
             address: profileData.address || '',
             country: profileData.country || 'CL',
             identificationValid: profileData.identificationValid || false,
+            regionId: profileData.regionId || '',
+            provinceId: profileData.provinceId || '',
           });
 
           setIdentificationState({
@@ -107,6 +119,76 @@ export default function ProfilePage() {
 
     loadData();
   }, [user, isProvider]);
+
+  // ============================================
+  // VERIFICACIÓN AUTOMÁTICA - SE EJECUTA EN CADA CAMBIO
+  // ============================================
+  useEffect(() => {
+    if (!isProvider) return;
+
+    // ✅ Calcular progreso y estado
+    const progress = getVerificationProgress(formData);
+    setVerificationProgress(progress);
+
+    const complete = isProviderComplete(formData);
+    setIsComplete(complete);
+
+    if (!complete) {
+      const missing = getMissingVerificationFields(formData);
+      setMissingFields(missing);
+    } else {
+      setMissingFields([]);
+    }
+
+    // ✅ Si ya está verificado por admin, no hacer nada
+    if (verification?.verificationStatus === 'approved') return;
+
+    // ✅ Si está completo y no está pendiente, solicitar verificación automática
+    if (complete && verification?.verificationStatus !== 'pending') {
+      handleAutoVerify();
+    }
+  }, [formData, isProvider, verification]);
+
+  // ============================================
+  // VERIFICACIÓN AUTOMÁTICA - USANDO EL SERVICIO
+  // ============================================
+  const handleAutoVerify = useCallback(async () => {
+    if (!user || !isProvider) return;
+    if (!isComplete) return;
+    if (verification?.verificationStatus === 'approved') return;
+    if (verification?.verificationStatus === 'pending') return;
+
+    setRequestingVerification(true);
+    try {
+      // ✅ Usar la función importada
+      await autoVerifyProvider(user.uid, {
+        uid: user.uid,
+        displayName: formData.displayName || '',
+        email: user.email || '',
+        phone: formData.phone || '',
+        identification: formData.identification || '',
+        country: formData.country || 'CL',
+        legalName: formData.legalName || '',
+        address: formData.address || '',
+        specialties: formData.specialties || [],
+        experience: formData.experience || 0,
+        description: formData.description || '',
+      });
+
+      // ✅ Recargar estado de verificación
+      const updated = await getVerificationStatus(user.uid);
+      setVerification(updated);
+
+      toast.success('🎉 ¡Cuenta verificada automáticamente!', {
+        icon: '✅',
+      });
+    } catch (error: any) {
+      log.error('Error en verificación automática:', error);
+      toast.error('Error al verificar automáticamente');
+    } finally {
+      setRequestingVerification(false);
+    }
+  }, [user, isProvider, isComplete, formData, verification]);
 
   // ============================================
   // HANDLERS
@@ -159,6 +241,14 @@ export default function ProfilePage() {
     }));
   }, []);
 
+  const handleRegionChange = useCallback((location: { regionId: string; provinceId: string }) => {
+    setFormData((prev) => ({
+      ...prev,
+      regionId: location.regionId,
+      provinceId: location.provinceId,
+    }));
+  }, []);
+
   // ============================================
   // GUARDAR PERFIL
   // ============================================
@@ -186,6 +276,8 @@ export default function ProfilePage() {
         address: formData.address,
         country: identificationState.country,
         identificationValid: identificationState.isValid,
+        regionId: formData.regionId,
+        provinceId: formData.provinceId,
       };
 
       await updateUserProfile(user.uid, updateData, firebaseUser || undefined);
@@ -198,270 +290,6 @@ export default function ProfilePage() {
       setSaving(false);
     }
   };
-
-  // ============================================
-  // VALIDACIONES PARA VERIFICACIÓN
-  // ============================================
-  const isFormComplete = useCallback(() => {
-    const specialties = formData.specialties || [];
-    const experience = formData.experience || 0;
-    const legalName = formData.legalName || '';
-    const address = formData.address || '';
-    const description = formData.description || '';
-    const location = formData.location || '';
-    const photoURL = formData.photoURL || '';
-
-    return (
-      formData.displayName.length >= 3 &&
-      formData.phone.length >= 8 &&
-      formData.identificationValid === true &&
-      specialties.length > 0 &&
-      legalName.length >= 3 &&
-      address.length >= 5 &&
-      description.length >= 20 &&
-      location.length >= 3 &&
-      photoURL.length >= 5 &&
-      experience >= 0
-    );
-  }, [formData]);
-
-  const getMissingFields = useCallback(() => {
-    const missing: string[] = [];
-    const specialties = formData.specialties || [];
-    const experience = formData.experience || 0;
-    const legalName = formData.legalName || '';
-    const address = formData.address || '';
-    const description = formData.description || '';
-    const location = formData.location || '';
-    const photoURL = formData.photoURL || '';
-
-    if (formData.displayName.length < 3) missing.push('Nombre completo (mínimo 3 caracteres)');
-    if (formData.phone.length < 8) missing.push('Teléfono (mínimo 8 dígitos)');
-    if (!formData.identificationValid) missing.push('Identificación válida');
-    if (specialties.length === 0) missing.push('Al menos una especialidad');
-    if (legalName.length < 3) missing.push('Razón social (mínimo 3 caracteres)');
-    if (address.length < 5) missing.push('Dirección fiscal (mínimo 5 caracteres)');
-    if (description.length < 20) missing.push('Descripción profesional (mínimo 20 caracteres)');
-    if (location.length < 3) missing.push('Ubicación (mínimo 3 caracteres)');
-    if (photoURL.length < 5) missing.push('Foto de perfil');
-    if (experience < 0) missing.push('Años de experiencia válidos');
-    return missing;
-  }, [formData]);
-
-  // ============================================
-  // SOLICITAR VERIFICACIÓN - CORREGIDA
-  // ============================================
-  const handleRequestVerification = async () => {
-    if (!user || !isProvider) {
-      toast.error('Debes ser un proveedor para solicitar verificación');
-      return;
-    }
-
-    if (!isFormComplete()) {
-      const missing = getMissingFields();
-      toast.error(`⚠️ Completa los siguientes campos:\n${missing.join('\n')}`);
-      return;
-    }
-
-    setRequestingVerification(true);
-    try {
-      // ✅ Solo los campos que existen en VerificationRequest
-      await requestVerification({
-        uid: user.uid,
-        displayName: formData.displayName || '',
-        email: user.email || '',
-        phone: formData.phone || '',
-        identification: formData.identification || '',
-        country: formData.country || 'CL',
-        legalName: formData.legalName || '',
-        address: formData.address || '',
-        specialties: formData.specialties || [],
-        experience: formData.experience || 0,
-        description: formData.description || '',
-      });
-
-      toast.success('✅ Solicitud de verificación enviada correctamente');
-      const updated = await getVerificationStatus(user.uid);
-      setVerification(updated);
-    } catch (error: any) {
-      log.error('Error:', error);
-      toast.error(error.message || 'Error al solicitar verificación');
-    } finally {
-      setRequestingVerification(false);
-    }
-  };
-
-  // ============================================
-  // ✅ RENDER VERIFICACIÓN - MOVIDO DENTRO DEL COMPONENTE
-  // ============================================
-  const renderVerificationStatus = useCallback(() => {
-    if (!isProvider) return null;
-
-    const isComplete = isFormComplete();
-    const missingFields = getMissingFields();
-
-    const statusMap: Record<
-      string,
-      {
-        icon: React.ReactNode;
-        label: string;
-        color: string;
-        description: string;
-      }
-    > = {
-      not_requested: {
-        icon: <Shield className="w-5 h-5 text-gray-400" />,
-        label: 'No verificada',
-        color: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
-        description: isComplete
-          ? '¡Listo para solicitar verificación!'
-          : 'Completa todos los campos para solicitar verificación',
-      },
-      pending: {
-        icon: <Clock className="w-5 h-5 text-yellow-500 animate-pulse" />,
-        label: 'Verificación pendiente',
-        color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-        description: 'Tu solicitud está siendo revisada por nuestro equipo',
-      },
-      approved: {
-        icon: <CheckCircle className="w-5 h-5 text-green-500" />,
-        label: 'Verificada ✓',
-        color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-        description: '¡Tu cuenta está verificada! Disfruta de todos los beneficios.',
-      },
-      rejected: {
-        icon: <XCircle className="w-5 h-5 text-red-500" />,
-        label: 'Rechazada',
-        color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-        description: 'Revisa los motivos y vuelve a solicitar',
-      },
-    };
-
-    const status = verification?.verificationStatus || 'not_requested';
-    const info = statusMap[status] || statusMap['not_requested'];
-
-    return (
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {info.icon}
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">Estado de verificación</p>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-sm px-2 py-0.5 rounded-full ${info.color}`}>
-                  {info.label}
-                </span>
-                {status === 'not_requested' && isComplete && (
-                  <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" />
-                    Todo listo
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{info.description}</p>
-            </div>
-          </div>
-
-          {/* Botones según estado */}
-          {status === 'not_requested' && (
-            <button
-              onClick={handleRequestVerification}
-              disabled={requestingVerification || !isComplete}
-              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm whitespace-nowrap ${
-                isComplete
-                  ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm'
-                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-              }`}
-              title={!isComplete ? 'Completa todos los campos requeridos' : ''}
-            >
-              {requestingVerification ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Shield className="w-4 h-4" />
-                  Solicitar verificación
-                </>
-              )}
-            </button>
-          )}
-
-          {status === 'pending' && (
-            <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
-              <Clock className="w-4 h-4 animate-pulse" />
-              <span>En revisión...</span>
-            </div>
-          )}
-
-          {status === 'approved' && (
-            <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-4 py-2 rounded-lg">
-              <CheckCircle className="w-4 h-4" />
-              <span>¡Cuenta verificada!</span>
-            </div>
-          )}
-
-          {status === 'rejected' && (
-            <button
-              onClick={handleRequestVerification}
-              disabled={requestingVerification || !isComplete}
-              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm whitespace-nowrap ${
-                isComplete
-                  ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm'
-                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {requestingVerification ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Reintentando...
-                </>
-              ) : (
-                <>
-                  <Shield className="w-4 h-4" />
-                  Reintentar
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Mostrar campos faltantes */}
-        {status === 'not_requested' && !isComplete && (
-          <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200 dark:border-yellow-800">
-            <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              Campos pendientes para solicitar verificación:
-            </p>
-            <ul className="text-xs text-yellow-700 dark:text-yellow-400 space-y-1">
-              {missingFields.map((field, index) => (
-                <li key={index}>• {field}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {verification?.verificationNotes && status === 'rejected' && (
-          <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-800">
-            <p className="text-sm font-medium text-red-800 dark:text-red-300">
-              ❌ Motivo del rechazo:
-            </p>
-            <p className="text-sm text-red-700 dark:text-red-400 mt-1">
-              {verification.verificationNotes}
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  }, [
-    isProvider,
-    verification,
-    requestingVerification,
-    isFormComplete,
-    getMissingFields,
-    handleRequestVerification,
-  ]);
 
   // ============================================
   // RENDER
@@ -573,24 +401,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Ubicación */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Ubicación *
-          </label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="Ciudad, provincia..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
         {/* VALIDACIÓN DE IDENTIFICACIÓN */}
         <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -675,6 +485,23 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* ✅ SELECTOR DE REGIÓN Y PROVINCIA */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  📍 Ubicación
+                </h3>
+
+                <RegionSelector
+                  value={{
+                    regionId: formData.regionId || '',
+                    provinceId: formData.provinceId || '',
+                  }}
+                  onChange={handleRegionChange}
+                  label="Región y Provincia"
+                  required={isProvider}
+                />
+              </div>
+
               {/* Especialidades */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -722,8 +549,88 @@ export default function ProfilePage() {
           </>
         )}
 
-        {/* Estado de verificación */}
-        {renderVerificationStatus()}
+        {/* ✅ BARRA DE PROGRESO DE VERIFICACIÓN - SOLO PARA PROVEEDORES */}
+        {isProvider && (
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary-500" />
+                Estado de verificación
+              </h3>
+              {verification?.verificationStatus === 'approved' ? (
+                <span className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+                  <CheckCircle className="w-4 h-4" />
+                  Verificada ✓
+                </span>
+              ) : isComplete ? (
+                <span className="text-sm font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verificando...
+                </span>
+              ) : (
+                <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
+                  <AlertTriangle className="w-4 h-4" />
+                  {verificationProgress}% completado
+                </span>
+              )}
+            </div>
+
+            {/* ✅ Barra de progreso */}
+            <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ${
+                  verification?.verificationStatus === 'approved'
+                    ? 'bg-green-500'
+                    : isComplete
+                      ? 'bg-blue-500 animate-pulse'
+                      : 'bg-yellow-500'
+                }`}
+                style={{
+                  width: `${verification?.verificationStatus === 'approved' ? 100 : verificationProgress}%`,
+                }}
+              />
+            </div>
+
+            {/* ✅ Estado actual y campos faltantes */}
+            {verification?.verificationStatus === 'approved' ? (
+              <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  ¡Tu cuenta está verificada! Disfruta de todos los beneficios.
+                </p>
+              </div>
+            ) : isComplete ? (
+              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verificando automáticamente tu cuenta...
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-2 flex items-center gap-1">
+                  <AlertTriangle className="w-4 h-4" />
+                  Completa todos los campos para verificación automática
+                </p>
+                {missingFields.length > 0 && (
+                  <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <p className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-1">
+                      Campos pendientes:
+                    </p>
+                    <ul className="text-xs text-yellow-600 dark:text-yellow-400 space-y-0.5">
+                      {missingFields.map((field, index) => (
+                        <li key={index} className="flex items-center gap-1">
+                          <span className="text-red-400">•</span>
+                          {field}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Botones */}
         <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

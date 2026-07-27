@@ -229,3 +229,67 @@ export const getPendingVerifications = async (): Promise<ProviderVerification[]>
     return [];
   }
 };
+
+// ✅ Verificación automática (sin necesidad de admin) - CORREGIDO
+export const autoVerifyProvider = async (uid: string, data: VerificationRequest): Promise<void> => {
+  try {
+    const dbInstance = getDb();
+
+    // ✅ 1. Crear/Actualizar verificación
+    const docRef = doc(dbInstance, 'verifications', uid);
+    const verificationData = {
+      ...data,
+      country: data.country || 'CL',
+      isVerified: true, // ✅ Automáticamente verificado
+      verificationStatus: 'approved' as const,
+      verificationDate: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      verificationNotes: 'Verificación automática - todos los campos completos',
+    };
+
+    await setDoc(docRef, verificationData);
+
+    // ✅ 2. Actualizar usuario
+    const userRef = doc(dbInstance, 'users', uid);
+    await updateDoc(userRef, {
+      isVerified: true,
+      verificationStatus: 'approved',
+      verifiedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    // ✅ 3. Actualizar proveedor
+    const providerRef = doc(dbInstance, 'providers', uid);
+    await updateDoc(providerRef, {
+      isVerified: true,
+      verificationStatus: 'approved',
+      verifiedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      // ✅ Asegurar que todos los campos están actualizados
+      displayName: data.displayName,
+      phone: data.phone,
+      specialties: data.specialties,
+      experience: data.experience,
+      description: data.description,
+      identification: data.identification,
+      legalName: data.legalName,
+      address: data.address,
+      country: data.country || 'CL',
+    });
+
+    // ✅ 4. Notificar al proveedor
+    await createNotification(
+      uid,
+      '✅ ¡Cuenta verificada automáticamente!',
+      'Todos tus datos están completos y tu cuenta ha sido verificada automáticamente. ¡Ya puedes comenzar a recibir solicitudes!',
+      'system',
+      '/dashboard/profile'
+    );
+
+    log.info('✅ Verificación automática completada para:', uid);
+  } catch (error) {
+    log.error('Error en verificación automática:', error);
+    throw new Error('Error al verificar automáticamente');
+  }
+};

@@ -2,8 +2,8 @@
 import { log } from '@/lib/utils/logger';
 
 import { BackgroundCarousel } from '@/components/common/BackgroundCarousel';
-import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
 import { GoogleIcon } from '@/components/common/GoogleIcon';
+import { MiMaestroLogo } from '@/components/common/MiMaestroLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertCircle, Eye, EyeOff, Loader2, Lock, Mail } from 'lucide-react';
 import Link from 'next/link';
@@ -116,7 +116,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
             <div className="flex justify-center">
-              <BuildLinkLogo size="xl" showTagline={true} />
+              <MiMaestroLogo size="xl" showTagline={true} />
             </div>
           </div>
 
@@ -265,7 +265,7 @@ export default function LoginPage() {
               </div>
               <div className="relative flex justify-center">
                 <span className="px-4 bg-transparent text-white/70 backdrop-blur-sm text-sm">
-                  ¿Nuevo en BuildLink?
+                  ¿Nuevo en MiMaestro?
                 </span>
               </div>
             </div>
@@ -296,7 +296,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <div className="text-center mt-8 pt-4 border-t border-white/10 text-xs text-white/70 drop-shadow-md">
-            <p>© 2026 BuildLink. Todos los derechos reservados.</p>
+            <p>© 2026 MiMaestro. Todos los derechos reservados.</p>
             <div className="mt-2 flex justify-center gap-4">
               <Link href="/terms" className="hover:text-white transition">
                 Términos

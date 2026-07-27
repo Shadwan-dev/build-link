@@ -1,4 +1,3 @@
-import { log } from '@/lib/utils/logger';
 import { PushNotificationManager } from '@/components/common/PushNotificationManager';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -15,15 +14,16 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'BuildLink - Conecta con profesionales de la construcción',
-    template: '%s | BuildLink',
+    default: 'MiMaestro - Encuentra al profesional que necesitas',
+    template: '%s | MiMaestro',
   },
   description:
-    'Conectamos clientes con profesionales verificados en construcción, albañilería, carpintería y más. Encuentra al experto que necesitas.',
-  keywords: 'construcción, albañilería, carpintería, profesionales, servicios, reformas, obras',
-  authors: [{ name: 'BuildLink' }],
-  creator: 'BuildLink',
-  publisher: 'BuildLink',
+    'Conectamos clientes con profesionales verificados en construcción, albañilería, carpintería y más. Encuentra a tu maestro de confianza.',
+  keywords:
+    'construcción, albañilería, carpintería, profesionales, servicios, reformas, obras, maestro',
+  authors: [{ name: 'MiMaestro' }],
+  creator: 'MiMaestro',
+  publisher: 'MiMaestro',
   formatDetection: {
     email: false,
     address: false,
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_ES',
-    url: 'https://buildlink.com',
-    siteName: 'BuildLink',
-    title: 'BuildLink - Conecta con profesionales de la construcción',
+    url: 'https://mimaestro.com',
+    siteName: 'MiMaestro',
+    title: 'MiMaestro - Encuentra al profesional que necesitas',
     description:
       'Encuentra los mejores profesionales en construcción, albañilería y carpintería en un solo lugar.',
     images: [
@@ -42,13 +42,13 @@ export const metadata: Metadata = {
         url: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
         width: 1200,
         height: 630,
-        alt: 'BuildLink - Profesionales de la construcción',
+        alt: 'MiMaestro - Profesionales de la construcción',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BuildLink - Conecta con profesionales de la construcción',
+    title: 'MiMaestro - Encuentra al profesional que necesitas',
     description: 'Encuentra los mejores profesionales en construcción, albañilería y carpintería.',
     images: [
       'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
@@ -68,13 +68,13 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="%232563EB"/><path d="M11 9H17C18.6569 9 20 10.3431 20 12C20 13.6569 18.6569 15 17 15H14M14 15H11M14 15V21M11 21H17" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="22" cy="22" r="3" fill="%23F59E0B"/><path d="M20 22L21.5 23.5L24.5 20.5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
+        url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="%232563EB"/><path d="M10 14L16 10L22 14L16 18L10 14Z" stroke="white" stroke-width="2" stroke-linejoin="round" fill="rgba(255,255,255,0.1)"/><rect x="13" y="14" width="6" height="8" rx="1" stroke="white" stroke-width="2"/><path d="M18 22L15 25L12 22" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.5" fill="%23F59E0B"/></svg>',
         type: 'image/svg+xml',
       },
     ],
     apple: [
       {
-        url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="%232563EB"/><path d="M11 9H17C18.6569 9 20 10.3431 20 12C20 13.6569 18.6569 15 17 15H14M14 15H11M14 15V21M11 21H17" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="22" cy="22" r="3" fill="%23F59E0B"/><path d="M20 22L21.5 23.5L24.5 20.5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>',
+        url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="%232563EB"/><path d="M10 14L16 10L22 14L16 18L10 14Z" stroke="white" stroke-width="2" stroke-linejoin="round" fill="rgba(255,255,255,0.1)"/><rect x="13" y="14" width="6" height="8" rx="1" stroke="white" stroke-width="2"/><path d="M18 22L15 25L12 22" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="16" r="2.5" fill="%23F59E0B"/></svg>',
         type: 'image/svg+xml',
       },
     ],

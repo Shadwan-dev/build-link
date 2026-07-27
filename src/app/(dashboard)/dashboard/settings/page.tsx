@@ -79,7 +79,7 @@ export default function SettingsPage() {
           ⚙️ Configuración
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1">
-          Personaliza tu experiencia en BuildLink
+          Personaliza tu experiencia en MiMaestro
         </p>
       </div>
 

@@ -1,5 +1,4 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
@@ -104,13 +103,6 @@ export default function DashboardPage() {
             color: 'bg-purple-500',
             href: '/dashboard/stats',
           },
-          {
-            title: 'Mensajes',
-            description: 'Comunícate con clientes',
-            icon: MessageSquare,
-            color: 'bg-orange-500',
-            href: '/dashboard/messages',
-          },
         ]
       : [
           {
@@ -133,13 +125,6 @@ export default function DashboardPage() {
             icon: Briefcase,
             color: 'bg-purple-500',
             href: '/dashboard/requests',
-          },
-          {
-            title: 'Mensajes',
-            description: 'Comunícate con profesionales',
-            icon: MessageSquare,
-            color: 'bg-orange-500',
-            href: '/dashboard/messages',
           },
         ];
 

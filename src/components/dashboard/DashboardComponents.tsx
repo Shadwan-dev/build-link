@@ -1,4 +1,3 @@
-import { log } from '@/lib/utils/logger';
 import dynamic from 'next/dynamic';
 
 // ✅ Carga perezosa de componentes pesados
@@ -22,14 +21,6 @@ export const RequestForm = dynamic(
   () => import('./requests/RequestForm').then((mod) => mod.RequestForm),
   {
     loading: () => <div className="p-4 text-center animate-pulse">Cargando formulario...</div>,
-    ssr: false,
-  }
-);
-
-export const MessageFormModal = dynamic(
-  () => import('./client/MessageFormModal').then((mod) => mod.MessageFormModal),
-  {
-    loading: () => <div className="p-4 text-center animate-pulse">Cargando mensajes...</div>,
     ssr: false,
   }
 );

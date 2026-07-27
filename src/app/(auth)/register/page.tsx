@@ -1,9 +1,8 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
 import { BackgroundCarousel } from '@/components/common/BackgroundCarousel';
-import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
 import { GoogleIcon } from '@/components/common/GoogleIcon';
+import { MiMaestroLogo } from '@/components/common/MiMaestroLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   AlertCircle,
@@ -170,7 +169,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-lg">
           <div className="text-center mb-6">
             <div className="flex justify-center">
-              <BuildLinkLogo size="lg" showTagline={true} />
+              <MiMaestroLogo size="lg" showTagline={true} />
             </div>
           </div>
 
@@ -278,7 +277,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="text-center mt-8 pt-4 border-t border-white/10 text-xs text-white/70 drop-shadow-md">
-            <p>© 2026 BuildLink. Todos los derechos reservados.</p>
+            <p>© 2026 MiMaestro. Todos los derechos reservados.</p>
             <div className="mt-2 flex justify-center gap-4">
               <Link href="/terms" className="hover:text-white transition">
                 Términos

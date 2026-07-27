@@ -7,6 +7,7 @@ import {
 } from '@/types/request.types';
 import {
   collection,
+  deleteDoc,
   doc,
   Firestore,
   getDoc,
@@ -24,6 +25,7 @@ import {
 import { getCategoryById, getSpecialtyById } from './catalog.service';
 import { db } from './config';
 import { createNotification } from './notification.service';
+import { notifyFilteredProviders, searchProvidersBySpecialtyAndLocation } from './provider.service';
 
 const COLLECTION_NAME = 'requests';
 const DEFAULT_PAGE_SIZE = 20;
@@ -87,65 +89,30 @@ const mapRequestsFromSnapshot = (snapshot: any): Request[] => {
 };
 
 // ============================================
-// 1️⃣ CREAR SOLICITUD (CON CATEGORÍAS)
-// ============================================
-// ============================================
-// 1️⃣ CREAR SOLICITUD (CON CATEGORÍAS)
+// 1️⃣ CREAR SOLICITUD (CON FILTRADO DE PROVEEDORES)
 // ============================================
 export const createRequest = async (data: CreateRequestInput): Promise<string> => {
   try {
-    log.info('📝 Datos recibidos en createRequest:', data);
-
     // ✅ Validar datos requeridos
     if (!data.clientId) throw new Error('El ID del cliente es requerido');
     if (!data.clientName) throw new Error('El nombre del cliente es requerido');
-    if (!data.providerId) throw new Error('El ID del proveedor es requerido');
-    if (!data.providerName) throw new Error('El nombre del proveedor es requerido');
     if (!data.categoryId) throw new Error('La categoría es requerida');
     if (!data.description || data.description.length < 10) {
       throw new Error('La descripción debe tener al menos 10 caracteres');
     }
 
     const dbInstance = getDb();
-
-    // ✅ Validar que el usuario es un cliente
-    try {
-      const userDoc = await getDoc(doc(dbInstance, 'users', data.clientId));
-      if (!userDoc.exists()) {
-        log.warning('⚠️ Usuario no encontrado en Firestore, pero continuamos...');
-      } else {
-        const userData = userDoc.data();
-        if (userData.role !== 'client') {
-          throw new Error('Solo los clientes pueden crear solicitudes');
-        }
-      }
-    } catch (userError) {
-      log.warning('⚠️ Error verificando usuario:', userError);
-      // No bloqueamos la creación si hay error de lectura
-    }
-
-    // ✅ Validar que el proveedor existe (opcional, no bloqueante)
-    try {
-      const providerDoc = await getDoc(doc(dbInstance, 'providers', data.providerId));
-      if (!providerDoc.exists()) {
-        log.warning('⚠️ Proveedor no encontrado en Firestore, pero continuamos...');
-      }
-    } catch (providerError) {
-      log.warning('⚠️ Error verificando proveedor:', providerError);
-      // No bloqueamos la creación si hay error de lectura
-    }
-
     const requestsRef = collection(dbInstance, COLLECTION_NAME);
     const docRef = doc(requestsRef);
     const now = serverTimestamp();
 
-    // ✅ Datos enriquecidos - SOLO con campos que existen en el tipo
+    // ✅ Datos enriquecidos
     const requestData = {
       // Campos obligatorios
       clientId: data.clientId,
       clientName: data.clientName,
-      providerId: data.providerId,
-      providerName: data.providerName,
+      providerId: data.providerId || 'general',
+      providerName: data.providerName || 'Proveedor general',
       categoryId: data.categoryId,
       categoryName: data.categoryName,
       description: data.description,
@@ -165,40 +132,57 @@ export const createRequest = async (data: CreateRequestInput): Promise<string> =
       images: data.images || [],
       response: '',
       whatsappContact: '',
+      // ✅ Campos para filtros de proveedores
+      providerSpecialty: data.providerSpecialty || '',
+      providerLocation: data.providerLocation || '',
+      // ✅ Nuevos campos para filtrado
+      regionId: data.regionId || '',
+      provinceId: data.provinceId || '',
       // Campos adicionales para tracking
       providerResponse: null,
       clientFeedback: null,
     };
 
-    log.info('📝 Guardando solicitud en Firestore:', requestData);
-
     // ✅ Guardar en Firestore
     await setDoc(docRef, requestData);
     log.info(`✅ Solicitud creada: ${docRef.id}`);
 
-    // ✅ Crear notificaciones (solo si la función existe)
-    try {
-      const { createNotification } = await import('./notification.service');
+    // ✅ Buscar proveedores según filtros
+    const providers = await searchProvidersBySpecialtyAndLocation(
+      data.providerSpecialty || data.categoryName,
+      data.regionId,
+      data.provinceId
+    );
 
-      await Promise.all([
-        createNotification(
-          data.providerId,
-          `📩 Nueva solicitud de ${data.clientName}`,
-          `${data.clientName} ha enviado una solicitud para: ${data.categoryName}`,
-          'request',
-          `/dashboard/requests/${docRef.id}`
-        ),
-        createNotification(
-          data.clientId,
-          '✅ Solicitud enviada',
-          `Tu solicitud para ${data.categoryName} ha sido enviada a ${data.providerName}`,
-          'response',
-          `/dashboard/requests/${docRef.id}`
-        ),
-      ]);
-    } catch (notifError) {
-      log.warning('⚠️ Error creando notificaciones (no bloqueante):', notifError);
-      // No bloqueamos la creación si fallan las notificaciones
+    // ✅ Notificar a los proveedores filtrados
+    if (providers.length > 0) {
+      await notifyFilteredProviders(
+        providers,
+        docRef.id,
+        data.clientName,
+        data.categoryName,
+        data.description
+      );
+
+      // ✅ También notificar al cliente que se notificaron proveedores
+      const { createNotification } = await import('./notification.service');
+      await createNotification(
+        data.clientId,
+        '📢 Solicitud publicada',
+        `Tu solicitud ha sido publicada y notificada a ${providers.length} profesionales`,
+        'response',
+        `/dashboard/requests/${docRef.id}`
+      );
+    } else {
+      // ✅ Si no hay proveedores, notificar al cliente
+      const { createNotification } = await import('./notification.service');
+      await createNotification(
+        data.clientId,
+        '⚠️ Sin proveedores disponibles',
+        'No se encontraron proveedores con los filtros seleccionados. Amplía tu búsqueda.',
+        'response',
+        `/dashboard/requests/${docRef.id}`
+      );
     }
 
     return docRef.id;
@@ -474,7 +458,7 @@ export const getRequestById = async (requestId: string): Promise<Request | null>
 };
 
 // ============================================
-// 8️⃣ ACTUALIZAR ESTADO DE SOLICITUD
+// 6️⃣ ACTUALIZAR ESTADO DE SOLICITUD
 // ============================================
 export const updateRequestStatus = async (
   requestId: string,
@@ -504,14 +488,31 @@ export const updateRequestStatus = async (
     if (response) updateData.response = response;
     if (whatsappContact) updateData.whatsappContact = whatsappContact;
 
+    // ✅ Si el proveedor acepta, guardar su número de teléfono
+    if (status === 'aceptado' && request.providerId) {
+      try {
+        const providerRef = doc(dbInstance, 'providers', request.providerId);
+        const providerSnap = await getDoc(providerRef);
+        if (providerSnap.exists()) {
+          const providerData = providerSnap.data();
+          // ✅ Si el proveedor no proporcionó contacto, usar su teléfono
+          if (!whatsappContact && providerData.phone) {
+            updateData.whatsappContact = providerData.phone;
+          }
+        }
+      } catch (providerError) {
+        console.warn('⚠️ Error obteniendo teléfono del proveedor:', providerError);
+      }
+    }
+
     // ✅ Actualizar en Firestore
     await updateDoc(docRef, updateData);
-    log.info(`✅ Solicitud ${requestId} actualizada a: ${status}`);
+    console.log(`✅ Solicitud ${requestId} actualizada a: ${status}`);
 
     // ✅ Crear notificaciones según el estado
     await createStatusNotifications(request, status, { response, whatsappContact });
   } catch (error) {
-    log.error('❌ Error actualizando solicitud:', error);
+    console.error('❌ Error actualizando solicitud:', error);
     throw new Error(error instanceof Error ? error.message : 'Error al actualizar la solicitud');
   }
 };
@@ -688,17 +689,101 @@ export const countRequestsByStatus = async (
 // ============================================
 // 1️⃣4️⃣ ELIMINAR SOLICITUD (SOFT DELETE)
 // ============================================
-export const deleteRequest = async (requestId: string): Promise<void> => {
+// ============================================
+// 🗑️ ELIMINAR SOLICITUD PENDIENTE
+// ============================================
+export const deletePendingRequest = async (
+  requestId: string,
+  userId: string,
+  reason?: string
+): Promise<void> => {
   try {
     const dbInstance = getDb();
     const docRef = doc(dbInstance, COLLECTION_NAME, requestId);
+
+    // ✅ Verificar que la solicitud existe
+    const requestDoc = await getDoc(docRef);
+    if (!requestDoc.exists()) {
+      throw new Error('Solicitud no encontrada');
+    }
+
+    const requestData = requestDoc.data();
+
+    // ✅ Verificar que el usuario es el cliente
+    if (requestData.clientId !== userId) {
+      throw new Error('No tienes permiso para eliminar esta solicitud');
+    }
+
+    // ✅ Verificar que la solicitud está pendiente
+    if (requestData.status !== 'pendiente') {
+      throw new Error('Solo se pueden eliminar solicitudes pendientes');
+    }
+
+    // ✅ Eliminar la solicitud (soft delete - cambiar estado a 'eliminada')
     await updateDoc(docRef, {
-      status: 'eliminado',
+      status: 'eliminada',
+      deletedAt: serverTimestamp(),
+      deletedReason: reason || 'Cancelada por el usuario',
       updatedAt: serverTimestamp(),
     });
-    log.info(`✅ Solicitud ${requestId} marcada como eliminada`);
+
+    // ✅ Crear notificación para el cliente
+    const { createNotification } = await import('./notification.service');
+    await createNotification(
+      userId,
+      '🗑️ Solicitud eliminada',
+      `Tu solicitud "${requestData.categoryName}" ha sido eliminada correctamente.`,
+      'response',
+      `/dashboard/requests`
+    );
+
+    // ✅ Si había un proveedor asignado, notificarle
+    if (requestData.providerId && requestData.providerId !== 'general') {
+      await createNotification(
+        requestData.providerId,
+        '🗑️ Solicitud cancelada',
+        `${requestData.clientName} ha cancelado la solicitud "${requestData.categoryName}"`,
+        'request',
+        `/dashboard/requests`
+      );
+    }
+
+    log.info(`🗑️ Solicitud ${requestId} eliminada por usuario ${userId}`);
   } catch (error) {
     log.error('❌ Error eliminando solicitud:', error);
-    throw new Error('Error al eliminar la solicitud');
+    throw new Error(error instanceof Error ? error.message : 'Error al eliminar la solicitud');
+  }
+};
+
+// ============================================
+// 🗑️ ELIMINAR SOLICITUD PERMANENTEMENTE (ADMIN)
+// ============================================
+export const deleteRequestPermanently = async (
+  requestId: string,
+  adminId: string
+): Promise<void> => {
+  try {
+    const dbInstance = getDb();
+    const docRef = doc(dbInstance, COLLECTION_NAME, requestId);
+
+    // ✅ Verificar que la solicitud existe
+    const requestDoc = await getDoc(docRef);
+    if (!requestDoc.exists()) {
+      throw new Error('Solicitud no encontrada');
+    }
+
+    // ✅ Verificar que el usuario es admin
+    const userDoc = await getDoc(doc(dbInstance, 'users', adminId));
+    if (!userDoc.exists() || userDoc.data().role !== 'admin') {
+      throw new Error('No tienes permisos de administrador');
+    }
+
+    // ✅ Eliminar permanentemente
+    await deleteDoc(docRef);
+
+    log.info(`🗑️ Solicitud ${requestId} eliminada permanentemente por admin ${adminId}`);
+  } catch (error) {
+    log.error('❌ Error eliminando solicitud permanentemente:', error);
+    throw new Error(error instanceof Error ? error.message : 'Error al eliminar la solicitud');
   }
 };

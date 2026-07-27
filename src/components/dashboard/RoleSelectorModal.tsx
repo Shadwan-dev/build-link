@@ -87,7 +87,7 @@ export const RoleSelectorModal = ({ onComplete }: RoleSelectorModalProps) => {
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Elige tu rol</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Selecciona cómo quieres usar BuildLink
+                Selecciona cómo quieres usar MiMaestro
               </p>
             </div>
           </div>

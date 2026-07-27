@@ -1,5 +1,4 @@
 'use client';
-import { log } from '@/lib/utils/logger';
 
 import { ProviderFilters } from '@/components/dashboard/providers/ProviderFilters';
 import { ProviderList } from '@/components/dashboard/providers/ProviderList';
@@ -12,17 +11,18 @@ export default function ProvidersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
+  const [minRating, setMinRating] = useState<number>(0);
 
   useEffect(() => {
     const loadProviders = async () => {
       setLoading(true);
       try {
-        // ✅ getProviders ahora devuelve { providers, lastDoc }
         const result = await getProviders({ limitCount: 50 });
         setProviders(result.providers);
         setFilteredProviders(result.providers);
       } catch (error) {
-        log.error('Error cargando proveedores:', error);
+        console.error('Error cargando proveedores:', error);
       } finally {
         setLoading(false);
       }
@@ -31,9 +31,11 @@ export default function ProvidersPage() {
     loadProviders();
   }, []);
 
+  // ✅ Aplicar filtros
   useEffect(() => {
     let result = providers;
 
+    // ✅ Búsqueda por texto
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
       result = result.filter(
@@ -44,16 +46,30 @@ export default function ProvidersPage() {
       );
     }
 
+    // ✅ Filtro por categoría
     if (selectedCategory) {
       result = result.filter((p) => p.specialties.includes(selectedCategory));
     }
 
+    // ✅ Filtro por ubicación
+    if (selectedLocation.trim()) {
+      const location = selectedLocation.toLowerCase().trim();
+      result = result.filter((p) => p.location?.toLowerCase().includes(location));
+    }
+
+    // ✅ Filtro por calificación mínima
+    if (minRating > 0) {
+      result = result.filter((p) => p.rating >= minRating);
+    }
+
     setFilteredProviders(result);
-  }, [providers, searchTerm, selectedCategory]);
+  }, [providers, searchTerm, selectedCategory, selectedLocation, minRating]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('');
+    setSelectedLocation('');
+    setMinRating(0);
   };
 
   return (
@@ -68,13 +84,18 @@ export default function ProvidersPage() {
         </p>
       </div>
 
-      {/* Filtros */}
+      {/* ✅ Filtros - Con todas las props requeridas */}
       <ProviderFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
+        selectedLocation={selectedLocation}
+        onLocationChange={setSelectedLocation}
+        minRating={minRating}
+        onRatingChange={setMinRating}
         onClearFilters={clearFilters}
+        totalResults={filteredProviders.length}
       />
 
       {/* Lista de proveedores */}
@@ -83,7 +104,7 @@ export default function ProvidersPage() {
         loading={loading}
         variant="compact"
         emptyMessage={
-          searchTerm || selectedCategory
+          searchTerm || selectedCategory || selectedLocation || minRating > 0
             ? 'No se encontraron proveedores con estos filtros'
             : 'Aún no hay proveedores registrados'
         }

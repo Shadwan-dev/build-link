@@ -41,10 +41,27 @@ export interface Provider {
   description: string;
   createdAt: any;
   updatedAt: any;
-  // ✅ Nuevos campos para reviews
-  responseTime?: string; // Tiempo promedio de respuesta
-  completedJobs?: number; // Trabajos completados
-  reviews?: Review[]; // Reseñas (opcional, para carga perezosa)
+  // ✅ Campos para reviews
+  responseTime?: string;
+  completedJobs?: number;
+  reviews?: Review[];
+  // ✅ Campos para geolocalización
+  latitude?: number;
+  longitude?: number;
+  serviceRadius?: number;
+  // ✅ NUEVOS CAMPOS DE UBICACIÓN
+  regionId?: string;
+  provinceId?: string;
+  // ✅ Campos para disponibilidad
+  availability?: {
+    monday?: { start: string; end: string }[];
+    tuesday?: { start: string; end: string }[];
+    wednesday?: { start: string; end: string }[];
+    thursday?: { start: string; end: string }[];
+    friday?: { start: string; end: string }[];
+    saturday?: { start: string; end: string }[];
+    sunday?: { start: string; end: string }[];
+  };
 }
 
 export interface ProviderFilters {
@@ -413,4 +430,211 @@ export const getProvidersWithFilters = async (
     log.error('Error obteniendo proveedores con filtros:', error);
     return { providers: [], lastDoc: null };
   }
+};
+// ============================================
+// 📍 BUSCAR PROVEEDORES POR UBICACIÓN
+// ============================================
+export const getProvidersByLocation = async (
+  latitude: number,
+  longitude: number,
+  radius: number = 10, // km
+  filters?: ProviderFilters
+): Promise<Provider[]> => {
+  try {
+    // ✅ Primero obtener todos los proveedores verificados
+    const { providers } = await getProviders({ limitCount: 100 });
+
+    // ✅ Filtrar por distancia
+    const filtered = providers.filter((provider) => {
+      // ✅ Verificar que el proveedor tenga coordenadas
+      if (!provider.latitude || !provider.longitude) {
+        return false;
+      }
+
+      const distance = calculateDistance(
+        latitude,
+        longitude,
+        provider.latitude,
+        provider.longitude
+      );
+
+      // ✅ Verificar si está dentro del radio
+      const providerRadius = provider.serviceRadius || radius;
+      return distance <= providerRadius;
+    });
+
+    // ✅ Aplicar filtros adicionales
+    let result = filtered;
+
+    if (filters?.category) {
+      result = result.filter((p) => p.specialties.some((s) => s === filters.category));
+    }
+
+    if (filters?.minRating) {
+      result = result.filter((p) => p.rating >= filters.minRating!);
+    }
+
+    if (filters?.search) {
+      const search = filters.search.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.displayName.toLowerCase().includes(search) ||
+          p.specialties.some((s) => s.toLowerCase().includes(search))
+      );
+    }
+
+    return result;
+  } catch (error) {
+    log.error('Error obteniendo proveedores por ubicación:', error);
+    return [];
+  }
+};
+
+// ✅ Calcular distancia entre dos puntos (fórmula de Haversine)
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// ✅ Verificar disponibilidad del proveedor
+// ✅ Verificar disponibilidad del proveedor
+export const checkProviderAvailability = (
+  provider: Provider,
+  date: Date,
+  time: string
+): boolean => {
+  // ✅ Verificar que el proveedor tenga disponibilidad definida
+  if (!provider.availability) {
+    return true; // Si no tiene definida disponibilidad, asumir que está disponible
+  }
+
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayName = days[date.getDay()];
+  const availability = provider.availability[dayName as keyof typeof provider.availability];
+
+  if (!availability || availability.length === 0) {
+    return false; // Si no hay horario para ese día, no está disponible
+  }
+
+  return availability.some((slot) => {
+    return time >= slot.start && time <= slot.end;
+  });
+};
+
+// ✅ Filtrar proveedores por región
+export const getProvidersByRegion = async (
+  regionId: string,
+  provinceId?: string
+): Promise<Provider[]> => {
+  try {
+    const { providers } = await getProviders({ limitCount: 100 });
+
+    return providers.filter((provider) => {
+      // ✅ Coincidencia por región
+      if (provider.regionId !== regionId) return false;
+
+      // ✅ Si se especifica provincia, filtrar también
+      if (provinceId && provider.provinceId !== provinceId) return false;
+
+      return true;
+    });
+  } catch (error) {
+    log.error('Error obteniendo proveedores por región:', error);
+    return [];
+  }
+};
+// ============================================
+// 🔍 BUSCAR PROVEEDORES POR ESPECIALIDAD Y UBICACIÓN
+// ============================================
+export const searchProvidersBySpecialtyAndLocation = async (
+  specialty: string,
+  regionId?: string,
+  provinceId?: string
+): Promise<Provider[]> => {
+  try {
+    const dbInstance = getDb();
+    let providers: Provider[] = [];
+
+    // ✅ 1. Obtener proveedores verificados
+    const result = await getProviders({ limitCount: 100 });
+    providers = result.providers;
+
+    // ✅ 2. Filtrar por especialidad
+    if (specialty) {
+      const specialtyLower = specialty.toLowerCase();
+      providers = providers.filter((p) =>
+        p.specialties.some((s) => s.toLowerCase().includes(specialtyLower))
+      );
+    }
+
+    // ✅ 3. Filtrar por región
+    if (regionId) {
+      providers = providers.filter((p) => p.regionId === regionId);
+    }
+
+    // ✅ 4. Filtrar por provincia (si se especifica)
+    if (provinceId) {
+      providers = providers.filter((p) => p.provinceId === provinceId);
+    }
+
+    log.info(`🔍 Proveedores encontrados: ${providers.length}`);
+    return providers;
+  } catch (error) {
+    log.error('Error buscando proveedores por especialidad y ubicación:', error);
+    return [];
+  }
+};
+
+// ============================================
+// 📢 NOTIFICAR A PROVEEDORES FILTRADOS
+// ============================================
+export const notifyFilteredProviders = async (
+  providers: Provider[],
+  requestId: string,
+  clientName: string,
+  categoryName: string,
+  description: string
+): Promise<void> => {
+  try {
+    const { createNotification } = await import('./notification.service');
+
+    // ✅ Enviar notificación a cada proveedor
+    const notifications = providers.map((provider) =>
+      createNotification(
+        provider.uid,
+        `📩 Nueva solicitud de ${clientName}`,
+        `${clientName} ha publicado una solicitud de "${categoryName}". ${description.slice(0, 60)}...`,
+        'request',
+        `/dashboard/requests/${requestId}`
+      )
+    );
+
+    await Promise.all(notifications);
+    log.info(`📢 Notificaciones enviadas a ${providers.length} proveedores`);
+  } catch (error) {
+    log.error('Error enviando notificaciones a proveedores:', error);
+  }
+};
+
+// ============================================
+// 📱 OBTENER CONTACTOS DE PROVEEDORES PARA WHATSAPP
+// ============================================
+export const getProviderContacts = async (
+  providers: Provider[]
+): Promise<{ phone: string; name: string }[]> => {
+  return providers
+    .filter((p) => p.phone && p.phone.length > 0)
+    .map((p) => ({
+      phone: p.phone,
+      name: p.displayName,
+    }));
 };

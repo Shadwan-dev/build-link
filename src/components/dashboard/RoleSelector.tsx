@@ -1,7 +1,7 @@
 'use client';
 import { log } from '@/lib/utils/logger';
 
-import { BuildLinkLogo } from '@/components/common/BuildLinkLogo';
+import { MiMaestroLogo } from '@/components/common/MiMaestroLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { Briefcase, Check, Loader2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -69,12 +69,12 @@ export const RoleSelector = ({ onRoleSelected }: RoleSelectorProps) => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <BuildLinkLogo size="xl" showTagline={true} />
+            <MiMaestroLogo size="xl" showTagline={true} />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Elige tu rol en BuildLink
+            Elige tu rol en MiMaestro
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">¿Cómo quieres usar BuildLink?</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">¿Cómo quieres usar MiMaestro?</p>
         </div>
 
         {/* Opciones de rol */}
