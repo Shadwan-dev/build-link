@@ -1,12 +1,12 @@
 'use client';
 
-import { DeleteRequestButton } from '@/components/dashboard/requests/DeleteRequestButton';
+import { TestimonioModal } from '@/components/dashboard/requests/TestimonioModal';
 import { WhatsAppContact } from '@/components/dashboard/requests/WhatsAppContact';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import { getRequestById, updateRequestStatus } from '@/lib/firebase/requests.service';
 import { log } from '@/lib/utils/logger';
-import { Request } from '@/types/request.types';
+import { Request, TestimonioData } from '@/types/request.types';
 import {
   AlertCircle,
   ArrowLeft,
@@ -17,7 +17,10 @@ import {
   Loader2,
   Mail,
   Phone,
-  Send,
+  RefreshCw,
+  Star,
+  ThumbsDown,
+  ThumbsUp,
   User,
   XCircle,
 } from 'lucide-react';
@@ -36,6 +39,7 @@ export default function RequestDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [responseText, setResponseText] = useState('');
   const [whatsappContact, setWhatsappContact] = useState('');
+  const [showTestimonioModal, setShowTestimonioModal] = useState(false);
 
   const requestId = params.id as string;
 
@@ -64,10 +68,12 @@ export default function RequestDetailPage() {
   }, [requestId]);
 
   // ✅ ACTUALIZAR ESTADO DE LA SOLICITUD
-  const handleStatusUpdate = async (status: 'aceptado' | 'rechazado') => {
+  const handleStatusUpdate = async (
+    status: 'aceptado' | 'rechazado' | 'en-progreso' | 'completado'
+  ) => {
     if (!request) return;
 
-    if (status === 'aceptado' && !responseText.trim()) {
+    if ((status === 'aceptado' || status === 'rechazado') && !responseText.trim()) {
       toast.error('Escribe un mensaje de respuesta');
       return;
     }
@@ -81,12 +87,48 @@ export default function RequestDetailPage() {
         status === 'aceptado' ? whatsappContact || undefined : undefined
       );
 
-      toast.success(status === 'aceptado' ? '✅ Solicitud aceptada' : '❌ Solicitud rechazada');
+      const statusMessages = {
+        aceptado: '✅ Solicitud aceptada',
+        rechazado: '❌ Solicitud rechazada',
+        'en-progreso': '🔄 Solicitud en progreso',
+        completado: '✅ Solicitud completada',
+      };
+
+      toast.success(statusMessages[status] || 'Estado actualizado');
       await loadRequest();
+
+      // ✅ Si se completó, mostrar modal de testimonio
+      if (status === 'completado') {
+        setTimeout(() => {
+          setShowTestimonioModal(true);
+        }, 500);
+      }
     } catch (error) {
       toast.error('Error al actualizar la solicitud');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  // ============================================
+  // ENVIAR TESTIMONIO - CORREGIDO
+  // ============================================
+  const handleTestimonioSubmit = async (testimonioData: TestimonioData) => {
+    if (!request) return;
+
+    try {
+      console.log('Testimonio enviado:', testimonioData);
+      toast.success('⭐ ¡Gracias por tu testimonio!');
+      setShowTestimonioModal(false);
+
+      await updateRequestStatus(request.id, 'completado', undefined, undefined, {
+        testimonio: testimonioData,
+      });
+
+      await loadRequest();
+    } catch (error) {
+      log.error('Error enviando testimonio:', error);
+      toast.error('Error al enviar el testimonio');
     }
   };
 
@@ -98,6 +140,7 @@ export default function RequestDetailPage() {
       case 'en-progreso':
         return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
       case 'completado':
+        return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
       case 'aceptado':
         return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
       case 'rechazado':
@@ -108,19 +151,30 @@ export default function RequestDetailPage() {
   };
 
   const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pendiente: 'Pendiente',
+      'en-progreso': 'En progreso',
+      completado: 'Completado',
+      aceptado: 'Aceptado',
+      rechazado: 'Rechazado',
+    };
+    return labels[status] || status;
+  };
+
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pendiente':
-        return 'Pendiente';
+        return <Clock className="w-5 h-5" />;
       case 'en-progreso':
-        return 'En progreso';
+        return <RefreshCw className="w-5 h-5" />;
       case 'completado':
-        return 'Completado';
+        return <CheckCircle className="w-5 h-5" />;
       case 'aceptado':
-        return 'Aceptado';
+        return <ThumbsUp className="w-5 h-5" />;
       case 'rechazado':
-        return 'Rechazado';
+        return <ThumbsDown className="w-5 h-5" />;
       default:
-        return status;
+        return <AlertCircle className="w-5 h-5" />;
     }
   };
 
@@ -174,6 +228,12 @@ export default function RequestDetailPage() {
   const isClient = user?.uid === request.clientId;
   const isProvider = user?.uid === request.providerId;
 
+  // ✅ Verificar si la solicitud está completada
+  const isCompleted = request.status === 'completado';
+
+  // ✅ Verificar si el cliente puede dar testimonio
+  const canTestimonio = isClient && isCompleted && !request.testimonio;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Botón volver */}
@@ -187,8 +247,18 @@ export default function RequestDetailPage() {
 
       {/* Detalle de la solicitud */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20">
+        {/* Header - con estilo según estado */}
+        <div
+          className={`p-6 border-b transition-colors ${
+            request.status === 'aceptado'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              : request.status === 'completado'
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                : request.status === 'rechazado'
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                  : 'bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20'
+          }`}
+        >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 flex-wrap">
@@ -196,8 +266,9 @@ export default function RequestDetailPage() {
                   {request.categoryName || 'Sin categoría'}
                 </h1>
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}
+                  className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${getStatusColor(request.status)}`}
                 >
+                  {getStatusIcon(request.status)}
                   {getStatusLabel(request.status)}
                 </span>
                 {request.urgency && (
@@ -236,15 +307,11 @@ export default function RequestDetailPage() {
                 </p>
                 <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Mail className="w-4 h-4 text-gray-400" />
-                  {isClient
-                    ? request.clientEmail || 'cliente@email.com'
-                    : request.clientEmail || 'cliente@email.com'}
+                  {isClient ? 'proveedor@email.com' : 'cliente@email.com'}
                 </p>
                 <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Phone className="w-4 h-4 text-gray-400" />
-                  {isClient
-                    ? request.clientPhone || '+34 600 000 000'
-                    : request.clientPhone || '+34 600 000 000'}
+                  {isClient ? '+34 600 000 000' : '+34 600 000 000'}
                 </p>
               </div>
             </div>
@@ -293,7 +360,7 @@ export default function RequestDetailPage() {
             </p>
           </div>
 
-          {/* ✅ Respuesta del proveedor - CORREGIDO (if con paréntesis) */}
+          {/* Respuesta del proveedor */}
           {request.response && (
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -360,24 +427,37 @@ export default function RequestDetailPage() {
             </div>
           )}
 
-          {/* ✅ ESTADO PARA CLIENTE */}
-          {isClient && request.status !== 'pendiente' && (
+          {/* ✅ ACCIONES PARA PROVEEDOR - TRABAJO EN PROGRESO */}
+          {isProvider && request.status === 'aceptado' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <p
-                  className={`font-medium ${
-                    request.status === 'aceptado' || request.status === 'completado'
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-red-600 dark:text-red-400'
-                  }`}
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  Has aceptado esta solicitud. Ahora puedes marcar el trabajo como completado.
+                </p>
+                <button
+                  onClick={() => handleStatusUpdate('completado')}
+                  disabled={updating}
+                  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2"
                 >
-                  {request.status === 'aceptado' || request.status === 'completado' ? (
-                    <>✅ El proveedor ha aceptado tu solicitud</>
-                  ) : request.status === 'rechazado' ? (
-                    <>❌ El proveedor ha rechazado tu solicitud</>
+                  {updating ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <>📋 Tu solicitud está en proceso</>
+                    <CheckCircle className="w-4 h-4" />
                   )}
+                  Marcar como completado
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ ESTADO PARA CLIENTE - CUANDO ESTÁ ACEPTADO */}
+          {isClient && request.status === 'aceptado' && (
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+                  <ThumbsUp className="w-4 h-4" />✅ El proveedor ha aceptado tu solicitud. Pronto
+                  comenzará el trabajo.
                 </p>
                 {request.response && (
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
@@ -393,17 +473,35 @@ export default function RequestDetailPage() {
               </div>
             </div>
           )}
-          {isClient && request.status === 'pendiente' && (
+
+          {/* ✅ ESTADO PARA CLIENTE - CUANDO ESTÁ COMPLETADO */}
+          {isClient && request.status === 'completado' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <div className="flex gap-3">
-                <DeleteRequestButton
-                  requestId={request.id}
-                  onDeleted={() => {
-                    toast.success('Solicitud eliminada');
-                    router.push('/dashboard/requests');
-                  }}
-                  variant="button"
-                />
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" />✅ ¡Trabajo completado! El proveedor ha
+                  finalizado el proyecto.
+                </p>
+                {canTestimonio && (
+                  <button
+                    onClick={() => setShowTestimonioModal(true)}
+                    className="mt-3 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition flex items-center gap-2"
+                  >
+                    <Star className="w-4 h-4" />
+                    Calificar y dejar testimonio
+                  </button>
+                )}
+                {request.testimonio && (
+                  <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300 flex items-center gap-2">
+                      <Star className="w-4 h-4 fill-current" />
+                      ¡Ya has dejado tu testimonio! ⭐ {request.testimonio.rating}/5
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      "{request.testimonio.comment}"
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -419,27 +517,17 @@ export default function RequestDetailPage() {
               />
             </div>
           )}
-
-          {/* ✅ Botón para crear nueva solicitud (solo clientes) */}
-          {isClient && (
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <button
-                onClick={() => {
-                  toast('Redirigiendo al formulario de nueva solicitud', {
-                    icon: '📝',
-                    duration: 2000,
-                  });
-                  router.push('/dashboard/requests/new');
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-              >
-                <Send className="w-4 h-4" />
-                Enviar nueva solicitud
-              </button>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* ✅ MODAL DE TESTIMONIO */}
+      {showTestimonioModal && request && (
+        <TestimonioModal
+          request={request}
+          onClose={() => setShowTestimonioModal(false)}
+          onSubmit={handleTestimonioSubmit}
+        />
+      )}
     </div>
   );
 }

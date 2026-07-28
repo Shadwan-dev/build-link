@@ -204,9 +204,6 @@ export default function ProfilePage() {
   // ============================================
   // GUARDAR Y VERIFICAR - UN SOLO PASO
   // ============================================
-  // ============================================
-  // GUARDAR Y VERIFICAR - UN SOLO PASO
-  // ============================================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;

@@ -4,6 +4,7 @@ import {
   Request,
   RequestFilterOptions,
   RequestStatus,
+  TestimonioData,
 } from '@/types/request.types';
 import {
   collection,
@@ -458,13 +459,17 @@ export const getRequestById = async (requestId: string): Promise<Request | null>
 };
 
 // ============================================
-// 6️⃣ ACTUALIZAR ESTADO DE SOLICITUD
+// 6️⃣ ACTUALIZAR ESTADO DE SOLICITUD (CON OPCIONES)
 // ============================================
 export const updateRequestStatus = async (
   requestId: string,
   status: RequestStatus,
   response?: string,
-  whatsappContact?: string
+  whatsappContact?: string,
+  // ✅ AÑADIR OPCIONES COMO QUINTO PARÁMETRO
+  options?: {
+    testimonio?: TestimonioData;
+  }
 ): Promise<void> => {
   try {
     if (!requestId) throw new Error('El ID de la solicitud es requerido');
@@ -488,6 +493,14 @@ export const updateRequestStatus = async (
     if (response) updateData.response = response;
     if (whatsappContact) updateData.whatsappContact = whatsappContact;
 
+    // ✅ Si hay testimonio en las opciones, guardarlo
+    if (options?.testimonio) {
+      updateData.testimonio = {
+        ...options.testimonio,
+        createdAt: serverTimestamp(),
+      };
+    }
+
     // ✅ Si el proveedor acepta, guardar su número de teléfono
     if (status === 'aceptado' && request.providerId) {
       try {
@@ -495,7 +508,6 @@ export const updateRequestStatus = async (
         const providerSnap = await getDoc(providerRef);
         if (providerSnap.exists()) {
           const providerData = providerSnap.data();
-          // ✅ Si el proveedor no proporcionó contacto, usar su teléfono
           if (!whatsappContact && providerData.phone) {
             updateData.whatsappContact = providerData.phone;
           }
