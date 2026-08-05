@@ -1,5 +1,6 @@
 'use client';
 
+import { PortfolioGallery } from '@/components/dashboard/portfolio/PortfolioGallery';
 import { useAuth } from '@/contexts/AuthContext';
 import { getProviderById, Provider } from '@/lib/firebase/provider.service';
 import { getProviderReviews, getReviewStats } from '@/lib/firebase/review.service';
@@ -213,6 +214,14 @@ export default function ProviderDetailPage() {
                   {provider.responseTime || 'Responde rápidamente'}
                 </span>
               </div>
+            </div>
+            {/* 📸 Portafolio */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <span className="text-2xl">📸</span>
+                Portafolio de trabajos
+              </h2>
+              <PortfolioGallery providerId={provider.uid} />
             </div>
 
             {/* ✅ Botón WhatsApp */}

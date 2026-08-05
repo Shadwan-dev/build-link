@@ -7,6 +7,8 @@
   "/(dashboard)/dashboard/jobs/page": "app/(dashboard)/dashboard/jobs/page.js",
   "/(dashboard)/dashboard/notifications/page": "app/(dashboard)/dashboard/notifications/page.js",
   "/(dashboard)/dashboard/page": "app/(dashboard)/dashboard/page.js",
+  "/(dashboard)/dashboard/portfolio/new/page": "app/(dashboard)/dashboard/portfolio/new/page.js",
+  "/(dashboard)/dashboard/portfolio/page": "app/(dashboard)/dashboard/portfolio/page.js",
   "/(dashboard)/dashboard/profile/page": "app/(dashboard)/dashboard/profile/page.js",
   "/(dashboard)/dashboard/providers/[uid]/page": "app/(dashboard)/dashboard/providers/[uid]/page.js",
   "/(dashboard)/dashboard/providers/page": "app/(dashboard)/dashboard/providers/page.js",

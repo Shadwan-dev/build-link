@@ -147,6 +147,18 @@
       "namedRegex": "^/dashboard/notifications(?:/)?$"
     },
     {
+      "page": "/dashboard/portfolio",
+      "regex": "^/dashboard/portfolio(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/portfolio(?:/)?$"
+    },
+    {
+      "page": "/dashboard/portfolio/new",
+      "regex": "^/dashboard/portfolio/new(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dashboard/portfolio/new(?:/)?$"
+    },
+    {
       "page": "/dashboard/profile",
       "regex": "^/dashboard/profile(?:/)?$",
       "routeKeys": {},

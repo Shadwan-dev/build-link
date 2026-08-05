@@ -7,6 +7,8 @@
   "/(dashboard)/dashboard/jobs/page": "/dashboard/jobs",
   "/(dashboard)/dashboard/notifications/page": "/dashboard/notifications",
   "/(dashboard)/dashboard/page": "/dashboard",
+  "/(dashboard)/dashboard/portfolio/new/page": "/dashboard/portfolio/new",
+  "/(dashboard)/dashboard/portfolio/page": "/dashboard/portfolio",
   "/(dashboard)/dashboard/profile/page": "/dashboard/profile",
   "/(dashboard)/dashboard/providers/[uid]/page": "/dashboard/providers/[uid]",
   "/(dashboard)/dashboard/providers/page": "/dashboard/providers",
