@@ -1,39 +1,43 @@
 'use client';
 
-import { Provider, getProviderById } from '@/lib/firebase/provider.service';
+import { useAuth } from '@/contexts/AuthContext';
+import { getProviderById, Provider } from '@/lib/firebase/provider.service';
+import { getProviderReviews, getReviewStats } from '@/lib/firebase/review.service';
 import { log } from '@/lib/utils/logger';
+import { Review, ReviewStats } from '@/types/review.types';
 import {
   ArrowLeft,
   Briefcase,
   CheckCircle,
+  Clock,
   Loader2,
   Mail,
   MapPin,
   MessageCircle,
+  MessageSquare,
   Phone,
   Star,
   User,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
-// ✅ Función para generar enlace de WhatsApp
-const getWhatsAppLink = (phone: string, message: string): string => {
-  const cleanPhone = phone.replace(/[^0-9+]/g, '');
-  const cleanMessage = encodeURIComponent(message);
-  return `https://wa.me/${cleanPhone}?text=${cleanMessage}`;
-};
-
 export default function ProviderDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const uid = params.uid as string;
 
   const [provider, setProvider] = useState<Provider | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
+  const [loadingReviews, setLoadingReviews] = useState(true);
 
+  // ✅ Cargar proveedor
   useEffect(() => {
     const loadProvider = async () => {
       if (!uid) return;
@@ -59,7 +63,28 @@ export default function ProviderDetailPage() {
     loadProvider();
   }, [uid]);
 
-  // ✅ Manejar contacto por WhatsApp
+  // ✅ Cargar reviews
+  useEffect(() => {
+    const loadReviews = async () => {
+      if (!provider) return;
+      setLoadingReviews(true);
+      try {
+        const [reviewsData, statsData] = await Promise.all([
+          getProviderReviews(provider.uid, 10),
+          getReviewStats(provider.uid),
+        ]);
+        setReviews(reviewsData.reviews);
+        setReviewStats(statsData);
+      } catch (error) {
+        log.error('Error cargando reviews:', error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+    loadReviews();
+  }, [provider]);
+
+  // ✅ Contactar por WhatsApp
   const handleWhatsApp = () => {
     if (!provider) return;
 
@@ -71,8 +96,24 @@ export default function ProviderDetailPage() {
 
     const specialties = provider.specialties.join(', ');
     const message = `Hola, me comunico a través de MiMaestro. Estoy interesado en tus servicios de ${specialties}. ¿Podrías darme más información?`;
-    const link = getWhatsAppLink(phone, message);
+    const link = `https://wa.me/${phone.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(link, '_blank');
+  };
+
+  // ✅ Renderizar estrellas
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-4 h-4 ${
+              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300 dark:text-gray-600'
+            }`}
+          />
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -150,6 +191,12 @@ export default function ProviderDetailPage() {
                     Verificado
                   </span>
                 )}
+                {reviewStats && reviewStats.totalReviews > 0 && (
+                  <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-medium rounded-full flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-current" />
+                    {reviewStats.averageRating} · {reviewStats.totalReviews} reseñas
+                  </span>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -162,16 +209,16 @@ export default function ProviderDetailPage() {
                   {provider.experience || 0} años de experiencia
                 </span>
                 <span className="flex items-center gap-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  {provider.rating?.toFixed(1) || '0'} ({provider.totalRatings || 0} reseñas)
+                  <Clock className="w-4 h-4" />
+                  {provider.responseTime || 'Responde rápidamente'}
                 </span>
               </div>
             </div>
 
-            {/* ✅ Botón de WhatsApp - Más visible */}
+            {/* ✅ Botón WhatsApp */}
             <button
               onClick={handleWhatsApp}
-              className="px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2 text-sm font-semibold shadow-md hover:shadow-lg"
+              className="px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2 text-sm font-semibold shadow-md hover:shadow-lg whitespace-nowrap"
             >
               <MessageCircle className="w-5 h-5" />
               Contactar por WhatsApp
@@ -184,7 +231,7 @@ export default function ProviderDetailPage() {
           {/* Especialidades */}
           <div>
             <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Especialidades
+              🏗️ Especialidades
             </h2>
             <div className="flex flex-wrap gap-2">
               {provider.specialties.map((specialty) => (
@@ -202,7 +249,7 @@ export default function ProviderDetailPage() {
           {provider.description && (
             <div>
               <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Sobre nosotros
+                📝 Sobre nosotros
               </h2>
               <p className="text-gray-600 dark:text-gray-400">{provider.description}</p>
             </div>
@@ -220,29 +267,93 @@ export default function ProviderDetailPage() {
             </div>
           </div>
 
-          {/* ✅ Acciones - Solo WhatsApp (eliminar formulario de mensajes) */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={handleWhatsApp}
-              className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl"
-            >
-              <MessageCircle className="w-5 h-5" />
-              Contactar por WhatsApp
-            </button>
-            <button className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-center font-medium">
-              Ver portafolio
-            </button>
-          </div>
+          {/* ✅ SECCIÓN DE VALORACIONES */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-400 fill-current" />
+              Valoraciones
+            </h2>
 
-          {/* ✅ Mensaje informativo sobre WhatsApp */}
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 flex-shrink-0" />
-              <span>
-                Al hacer clic en "Contactar por WhatsApp" serás redirigido a WhatsApp para
-                comunicarte directamente con el proveedor.
-              </span>
-            </p>
+            {loadingReviews ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-primary-600" />
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+                <p>Este proveedor aún no tiene valoraciones</p>
+              </div>
+            ) : (
+              <>
+                {/* Resumen de estadísticas */}
+                {reviewStats && reviewStats.totalReviews > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                      <div>
+                        <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                          {reviewStats.averageRating}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {renderStars(Math.round(reviewStats.averageRating))}
+                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">
+                            ({reviewStats.totalReviews} reseñas)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">⭐ Calidad</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {reviewStats.averageCategories.calidad}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-400">⏰ Puntualidad</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {reviewStats.averageCategories.puntualidad}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-400">💬 Comunicación</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {reviewStats.averageCategories.comunicacion}
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-400">💰 Precio</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {reviewStats.averageCategories.precio}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Lista de reviews */}
+                <div className="space-y-4">
+                  {reviews.slice(0, 5).map((review) => (
+                    <div key={review.id} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                            <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
+                              {review.clientName?.[0] || 'U'}
+                            </span>
+                          </div>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {review.clientName || 'Cliente'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">{renderStars(review.rating)}</div>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{review.comment}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        {review.createdAt?.toDate?.().toLocaleDateString('es-ES') ||
+                          'Fecha no disponible'}
+                      </p>
+                    </div>
+                  ))}
+                  {reviews.length > 5 && (
+                    <button className="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+                      Ver todas las valoraciones
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
