@@ -433,7 +433,6 @@ export const getFilteredRequests = async (
     return [];
   }
 };
-// ... todo tu código existente ...
 
 // ============================================
 // 7️⃣ OBTENER SOLICITUD POR ID (IMPORTANTE)
@@ -466,7 +465,6 @@ export const updateRequestStatus = async (
   status: RequestStatus,
   response?: string,
   whatsappContact?: string,
-  // ✅ AÑADIR OPCIONES COMO QUINTO PARÁMETRO
   options?: {
     testimonio?: TestimonioData;
   }
@@ -484,12 +482,18 @@ export const updateRequestStatus = async (
       throw new Error('Solicitud no encontrada');
     }
 
+    // ✅ Verificar que está pendiente para aceptar/rechazar
+    if ((status === 'aceptado' || status === 'rechazado') && request.status !== 'pendiente') {
+      throw new Error(`La solicitud ya está ${request.status}`);
+    }
+
     // ✅ Datos a actualizar
     const updateData: any = {
       status,
       updatedAt: serverTimestamp(),
     };
 
+    // ✅ Solo agregar response si existe
     if (response) updateData.response = response;
     if (whatsappContact) updateData.whatsappContact = whatsappContact;
 
@@ -501,20 +505,18 @@ export const updateRequestStatus = async (
       };
     }
 
-    // ✅ Si el proveedor acepta, guardar su número de teléfono
-    if (status === 'aceptado' && request.providerId) {
-      try {
-        const providerRef = doc(dbInstance, 'providers', request.providerId);
-        const providerSnap = await getDoc(providerRef);
-        if (providerSnap.exists()) {
-          const providerData = providerSnap.data();
-          if (!whatsappContact && providerData.phone) {
-            updateData.whatsappContact = providerData.phone;
-          }
-        }
-      } catch (providerError) {
-        console.warn('⚠️ Error obteniendo teléfono del proveedor:', providerError);
-      }
+    // ✅ Si el proveedor acepta, guardar fecha
+    if (status === 'aceptado') {
+      updateData.acceptedAt = serverTimestamp();
+    }
+
+    if (status === 'rechazado') {
+      updateData.rejectedAt = serverTimestamp();
+    }
+
+    // ✅ Si la solicitud está completada, guardar fecha
+    if (status === 'completado') {
+      updateData.completedAt = serverTimestamp();
     }
 
     // ✅ Actualizar en Firestore

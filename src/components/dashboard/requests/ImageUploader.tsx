@@ -1,4 +1,4 @@
-// components/ImageUploader.tsx
+// components/dashboard/requests/ImageUploader.tsx
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +30,8 @@ export const ImageUploader = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (files: FileList) => {
+    console.log('📸 handleFileUpload llamado con files:', files.length);
+
     if (!user) {
       toast.error('Debes iniciar sesión para subir imágenes');
       return;
@@ -77,19 +79,25 @@ export const ImageUploader = ({
           file = await compressImage(file);
         }
 
-        // ✅ Subir a Cloudinary en lugar de Firebase Storage
+        console.log(`📸 Subiendo imagen ${i + 1} a Cloudinary...`);
+
+        // ✅ Subir a Cloudinary
         const url = await uploadToCloudinary(file, (progress) => {
           setUploadProgress(progress);
         });
 
+        console.log(`✅ Imagen ${i + 1} subida:`, url);
         uploadedUrls.push(url);
       }
 
-      onChange([...images, ...uploadedUrls]);
+      const newImages = [...images, ...uploadedUrls];
+      console.log('📸 URLs totales:', newImages);
+
+      onChange(newImages);
       toast.success(`${uploadedUrls.length} imagen(es) subida(s) correctamente`);
       setUploadProgress(100);
     } catch (error) {
-      console.error('Error subiendo imágenes:', error);
+      console.error('❌ Error subiendo imágenes:', error);
       toast.error('Error al subir las imágenes');
     } finally {
       setLoading(false);
@@ -99,7 +107,6 @@ export const ImageUploader = ({
     }
   };
 
-  // ... (resto del código igual, no cambia)
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
@@ -111,12 +118,6 @@ export const ImageUploader = ({
   const handleRemoveImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
     onChange(newImages);
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
   };
 
   return (
@@ -263,3 +264,5 @@ export const ImageUploader = ({
     </div>
   );
 };
+
+ImageUploader.displayName = 'ImageUploader';

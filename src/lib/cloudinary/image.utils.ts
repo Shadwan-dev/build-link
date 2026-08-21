@@ -1,12 +1,12 @@
 // lib/cloudinary/image.utils.ts
+
 import { getOptimizedCloudinaryUrl } from './upload.service';
 
-// Función para verificar si una URL es de Cloudinary
 export const isCloudinaryUrl = (url: string): boolean => {
-  return url?.includes('cloudinary.com') || false;
+  if (!url) return false;
+  return url.includes('cloudinary.com') || url.includes('res.cloudinary.com');
 };
 
-// Función para obtener URL optimizada con diferentes tamaños
 export const getImageUrl = (
   url: string,
   options?: {
@@ -14,15 +14,33 @@ export const getImageUrl = (
     height?: number;
     crop?: 'fill' | 'fit' | 'limit' | 'pad';
     quality?: 'auto' | number;
+    fallback?: string;
   }
 ): string => {
-  if (!url) return '';
-
-  // Si es Cloudinary, optimizar
-  if (isCloudinaryUrl(url)) {
-    return getOptimizedCloudinaryUrl(url, options);
+  if (!url) {
+    return options?.fallback || '/images/placeholder.jpg';
   }
 
-  // Si es Firebase o cualquier otra URL, devolverla sin cambios
+  if (isCloudinaryUrl(url)) {
+    try {
+      return getOptimizedCloudinaryUrl(url, options);
+    } catch (error) {
+      console.warn('Error optimizando URL de Cloudinary:', error);
+      return url;
+    }
+  }
+
   return url;
+};
+
+export const getThumbnailUrl = (url: string): string => {
+  return getImageUrl(url, { width: 200, height: 200, crop: 'fill' });
+};
+
+export const getMediumUrl = (url: string): string => {
+  return getImageUrl(url, { width: 600, height: 400, crop: 'fill' });
+};
+
+export const getLargeUrl = (url: string): string => {
+  return getImageUrl(url, { width: 1200, height: 800, crop: 'fill' });
 };

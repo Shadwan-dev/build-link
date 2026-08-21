@@ -1,9 +1,12 @@
+// app/dashboard/requests/[id]/page.tsx
+
 'use client';
 
 import { TestimonioModal } from '@/components/dashboard/requests/TestimonioModal';
 import { WhatsAppContact } from '@/components/dashboard/requests/WhatsAppContact';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
+import { getImageUrl } from '@/lib/cloudinary/image.utils';
 import { getRequestById, updateRequestStatus } from '@/lib/firebase/requests.service';
 import { log } from '@/lib/utils/logger';
 import { Request, TestimonioData } from '@/types/request.types';
@@ -36,6 +39,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
+// ✅ IMPORTAR utilidad de Cloudinary
+
 export default function RequestDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -47,6 +52,9 @@ export default function RequestDetailPage() {
   const [responseText, setResponseText] = useState('');
   const [whatsappContact, setWhatsappContact] = useState('');
   const [showTestimonioModal, setShowTestimonioModal] = useState(false);
+  // ✅ Estado para lightbox de imágenes
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState('');
 
   const requestId = params.id as string;
 
@@ -61,6 +69,16 @@ export default function RequestDetailPage() {
       } else {
         toast.error('Solicitud no encontrada');
         router.push('/dashboard/requests');
+      }
+      if (data) {
+        setRequest(data);
+        // ✅ DEBUG: Verificar que las imágenes existen
+        console.log('📸 Imágenes de la solicitud:', data.images);
+        console.log('📸 ¿Tiene imágenes?', data.images && data.images.length > 0);
+        if (data.images && data.images.length > 0) {
+          console.log('📸 Primera imagen:', data.images[0]);
+          console.log('📸 Es Cloudinary?', data.images[0].includes('cloudinary.com'));
+        }
       }
     } catch (error) {
       log.error('Error cargando solicitud:', error);
@@ -109,8 +127,14 @@ export default function RequestDetailPage() {
           setShowTestimonioModal(true);
         }, 500);
       }
-    } catch (error) {
-      toast.error('Error al actualizar la solicitud');
+
+      if (status === 'aceptado' || status === 'rechazado') {
+        setResponseText('');
+        setWhatsappContact('');
+      }
+    } catch (error: any) {
+      log.error('Error actualizando solicitud:', error);
+      toast.error(error.message || 'Error al actualizar la solicitud');
     } finally {
       setUpdating(false);
     }
@@ -121,13 +145,12 @@ export default function RequestDetailPage() {
     if (!request) return;
 
     try {
-      toast.success('⭐ ¡Gracias por tu testimonio!');
-      setShowTestimonioModal(false);
-
       await updateRequestStatus(request.id, 'completado', undefined, undefined, {
         testimonio: testimonioData,
       });
 
+      toast.success('⭐ ¡Gracias por tu testimonio!');
+      setShowTestimonioModal(false);
       await loadRequest();
     } catch (error) {
       log.error('Error enviando testimonio:', error);
@@ -203,6 +226,19 @@ export default function RequestDetailPage() {
     }
   };
 
+  // ✅ Abrir lightbox
+  const openLightbox = (url: string) => {
+    setLightboxImage(url);
+    setLightboxOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  // ✅ Cerrar lightbox
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    document.body.style.overflow = 'auto';
+  };
+
   // ✅ ESTADOS DE CARGA
   if (loading) {
     return (
@@ -230,14 +266,8 @@ export default function RequestDetailPage() {
 
   const isClient = user?.uid === request.clientId;
   const isProvider = user?.uid === request.providerId;
-
-  // ✅ Verificar si la solicitud está completada
   const isCompleted = request.status === 'completado';
-
-  // ✅ Verificar si el cliente puede dar testimonio
   const canTestimonio = isClient && isCompleted && !request.testimonio;
-
-  // ✅ Verificar si hay imágenes en la solicitud
   const hasImages = request.images && request.images.length > 0;
 
   return (
@@ -439,40 +469,57 @@ export default function RequestDetailPage() {
             </div>
           </div>
 
-          {/* Imágenes */}
-          {request.images && request.images.length > 0 && (
+          {/* ✅ IMÁGENES OPTIMIZADAS CON CLOUDINARY Y LIGHTBOX */}
+          {hasImages && (
             <div>
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                 <ImageIcon className="w-4 h-4 text-primary-500" />
-                Imágenes del proyecto ({request.images.length})
+                Imágenes del proyecto ({request.images!.length})
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {request.images.map((url, index) => (
-                  <div
-                    key={index}
-                    className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
-                    onClick={() => window.open(url, '_blank')}
-                  >
-                    <img
-                      src={url}
-                      alt={`Imagen ${index + 1}`}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12"%3E❌%3C/text%3E%3C/svg%3E';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">Ver</span>
-                    </div>
-                    {/* ✅ Usar la variable imagesLength para TypeScript */}
-                    {request.images && (
-                      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                        {index + 1}/{request.images.length}
+                {request.images!.map((url, index) => {
+                  // ✅ Generar URLs optimizadas usando getImageUrl directamente
+                  const thumbnailUrl = getImageUrl(url, { width: 200, height: 200, crop: 'fill' });
+                  const mediumUrl = getImageUrl(url, { width: 600, height: 400, crop: 'fill' });
+                  const largeUrl = getImageUrl(url, { width: 1200, height: 800, crop: 'fill' });
+
+                  return (
+                    <div
+                      key={index}
+                      className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
+                      onClick={() => openLightbox(largeUrl)}
+                    >
+                      <img
+                        src={thumbnailUrl}
+                        alt={`Imagen ${index + 1} - ${request.categoryName}`}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12"%3E📸%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                      {/* Overlay al hacer hover */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="bg-white/90 dark:bg-gray-800/90 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5 shadow-lg">
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          Ver ampliada
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {/* Contador de imágenes */}
+                      <div className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                        <ImageIcon className="w-2.5 h-2.5" />
+                        {index + 1}/{request.images!.length}
+                      </div>
+                      {/* Indicador de portada */}
+                      {index === 0 && (
+                        <div className="absolute top-1.5 left-1.5 bg-primary-600 text-white text-[9px] font-medium px-1.5 py-0.5 rounded-full">
+                          Portada
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -494,7 +541,7 @@ export default function RequestDetailPage() {
             </div>
           )}
 
-          {/* ✅ ACCIONES PARA PROVEEDOR */}
+          {/* ✅ ACCIONES PARA PROVEEDOR - SOLICITUD PENDIENTE */}
           {isProvider && request.status === 'pendiente' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
@@ -687,7 +734,6 @@ export default function RequestDetailPage() {
                   </p>
                   <div className="flex items-center gap-1 mt-1">
                     {[1, 2, 3, 4, 5].map((star) => {
-                      // ✅ Usar optional chaining y valor por defecto
                       const rating = request.testimonio?.rating || 0;
                       return (
                         <Star
@@ -707,6 +753,44 @@ export default function RequestDetailPage() {
           )}
         </div>
       </div>
+
+      {/* ✅ LIGHTBOX PARA IMÁGENES */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+          onClick={closeLightbox}
+        >
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 transition z-10 p-2 rounded-full bg-black/50 hover:bg-black/70"
+          >
+            <XCircle className="w-8 h-8" />
+          </button>
+
+          <div
+            className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={lightboxImage}
+              alt="Imagen ampliada"
+              className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231f2937"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%236b7280" font-size="12"%3E❌%3C/text%3E%3C/svg%3E';
+              }}
+            />
+          </div>
+
+          {/* Información de la imagen */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-full flex items-center gap-2">
+            <ImageIcon className="w-4 h-4" />
+            <span>{request?.categoryName || 'Imagen'}</span>
+            <span className="text-gray-400">•</span>
+            <span className="text-gray-400">Haz clic para cerrar</span>
+          </div>
+        </div>
+      )}
 
       {/* ✅ MODAL DE TESTIMONIO */}
       {showTestimonioModal && request && (

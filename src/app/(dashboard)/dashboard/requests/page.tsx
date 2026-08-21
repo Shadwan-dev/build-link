@@ -4,7 +4,7 @@ import { RequestFilters } from '@/components/dashboard/requests/RequestFilters';
 import { RequestList } from '@/components/dashboard/requests/RequestList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
-import { getFilteredRequests } from '@/lib/firebase/requests.service';
+import { getFilteredRequests, updateRequestStatus } from '@/lib/firebase/requests.service';
 import { log } from '@/lib/utils/logger';
 import { Request, RequestFilterOptions } from '@/types/request.types';
 import { Filter, Plus, Search, X } from 'lucide-react';
@@ -33,6 +33,16 @@ export default function RequestsPage() {
     try {
       const data = await getFilteredRequests(user.uid, currentRole || 'client', filters);
       setRequests(data);
+      // ✅ DEBUG: Verificar imágenes
+      console.log('📸 Solicitudes cargadas:', data.length);
+      data.forEach((req, index) => {
+        console.log(`📸 Solicitud ${index}:`, {
+          id: req.id,
+          title: req.categoryName,
+          hasImages: req.images && req.images.length > 0,
+          images: req.images,
+        });
+      });
     } catch (error) {
       log.error('Error cargando solicitudes:', error);
       toast.error('Error al cargar solicitudes');
@@ -44,6 +54,30 @@ export default function RequestsPage() {
   useEffect(() => {
     loadRequests();
   }, [loadRequests]);
+
+  const handleStatusChange = async (id: string, status: 'aceptado' | 'rechazado') => {
+    if (!user) return;
+
+    try {
+      // ✅ 1. Actualizar en Firestore
+      await updateRequestStatus(id, status, user.uid);
+
+      // ✅ 2. Actualizar estado local (optimista)
+      setRequests((prev) =>
+        prev.map((req) => (req.id === id ? { ...req, status: status, providerId: user.uid } : req))
+      );
+
+      toast.success(`✅ Solicitud ${status === 'aceptado' ? 'aceptada' : 'rechazada'}`);
+
+      // ✅ 3. Recargar para reflejar cambios adicionales
+      await loadRequests();
+    } catch (error: any) {
+      log.error('Error actualizando solicitud:', error);
+      toast.error(error.message || 'Error al actualizar la solicitud');
+      // ✅ Revertir cambio optimista en caso de error
+      await loadRequests();
+    }
+  };
 
   // ✅ Manejar cambio de filtros
   const handleFilterChange = (newFilters: RequestFilterOptions) => {
@@ -212,7 +246,7 @@ export default function RequestsPage() {
         emptyMessage={
           isProvider ? 'No has recibido solicitudes aún' : 'No has enviado solicitudes aún'
         }
-        onStatusChange={loadRequests}
+        onStatusChange={handleStatusChange}
         showActions={isProvider}
       />
 
