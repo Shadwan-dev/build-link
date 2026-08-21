@@ -10,14 +10,21 @@ import { Request, TestimonioData } from '@/types/request.types';
 import {
   AlertCircle,
   ArrowLeft,
+  Award,
+  Briefcase,
   Calendar,
   CheckCircle,
   Clock,
   DollarSign,
+  Image as ImageIcon,
   Loader2,
   Mail,
+  MapPin,
+  MessageSquare,
   Phone,
   RefreshCw,
+  Send,
+  Shield,
   Star,
   ThumbsDown,
   ThumbsUp,
@@ -97,7 +104,6 @@ export default function RequestDetailPage() {
       toast.success(statusMessages[status] || 'Estado actualizado');
       await loadRequest();
 
-      // ✅ Si se completó, mostrar modal de testimonio
       if (status === 'completado') {
         setTimeout(() => {
           setShowTestimonioModal(true);
@@ -110,14 +116,11 @@ export default function RequestDetailPage() {
     }
   };
 
-  // ============================================
-  // ENVIAR TESTIMONIO - CORREGIDO
-  // ============================================
+  // ✅ ENVIAR TESTIMONIO
   const handleTestimonioSubmit = async (testimonioData: TestimonioData) => {
     if (!request) return;
 
     try {
-      console.log('Testimonio enviado:', testimonioData);
       toast.success('⭐ ¡Gracias por tu testimonio!');
       setShowTestimonioModal(false);
 
@@ -234,12 +237,15 @@ export default function RequestDetailPage() {
   // ✅ Verificar si el cliente puede dar testimonio
   const canTestimonio = isClient && isCompleted && !request.testimonio;
 
+  // ✅ Verificar si hay imágenes en la solicitud
+  const hasImages = request.images && request.images.length > 0;
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Botón volver */}
       <Link
         href="/dashboard/requests"
-        className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+        className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition text-sm"
       >
         <ArrowLeft className="w-4 h-4" />
         Volver a solicitudes
@@ -247,7 +253,7 @@ export default function RequestDetailPage() {
 
       {/* Detalle de la solicitud */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        {/* Header - con estilo según estado */}
+        {/* Header */}
         <div
           className={`p-6 border-b transition-colors ${
             request.status === 'aceptado'
@@ -281,24 +287,39 @@ export default function RequestDetailPage() {
                 )}
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                #{request.id.slice(0, 8)} •{' '}
                 {request.createdAt
                   ? new Date(request.createdAt.seconds * 1000).toLocaleString()
                   : 'Fecha no disponible'}
               </p>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-gray-500 dark:text-gray-400">#{request.id.slice(0, 8)}</span>
+            <div className="flex items-center gap-2">
+              {request.providerSpecialty && (
+                <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-gray-600 dark:text-gray-400">
+                  🔍 {request.providerSpecialty}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Contenido */}
+        {/* Contenido - Grid de información */}
         <div className="p-6 space-y-6">
           {/* Información del cliente/proveedor */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                {isClient ? '🧑‍💼 Proveedor' : '👤 Cliente'}
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                {isClient ? (
+                  <>
+                    <Briefcase className="w-4 h-4" />
+                    Proveedor
+                  </>
+                ) : (
+                  <>
+                    <User className="w-4 h-4" />
+                    Cliente
+                  </>
+                )}
               </p>
               <div className="mt-2 space-y-2">
                 <p className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
@@ -307,18 +328,78 @@ export default function RequestDetailPage() {
                 </p>
                 <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Mail className="w-4 h-4 text-gray-400" />
-                  {isClient ? 'proveedor@email.com' : 'cliente@email.com'}
+                  {isClient
+                    ? request.providerEmail || 'proveedor@email.com'
+                    : request.clientEmail || 'cliente@email.com'}
                 </p>
                 <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Phone className="w-4 h-4 text-gray-400" />
-                  {isClient ? '+34 600 000 000' : '+34 600 000 000'}
+                  {isClient
+                    ? request.providerPhone || '+34 600 000 000'
+                    : request.clientPhone || '+34 600 000 000'}
                 </p>
               </div>
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                📋 Detalles del proyecto
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Ubicación
+              </p>
+              <div className="mt-2 space-y-2">
+                <p className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
+                  <MapPin className="w-4 h-4 text-gray-400" />
+                  {request.location || 'No especificada'}
+                </p>
+                {request.providerLocation && (
+                  <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <Shield className="w-4 h-4 text-gray-400" />
+                    Zona: {request.providerLocation}
+                  </p>
+                )}
+                {request.regionId && (
+                  <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    Región: {request.regionId}
+                  </p>
+                )}
+                {request.provinceId && (
+                  <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    Provincia: {request.provinceId}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Especialidades y detalles del proyecto */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <Briefcase className="w-4 h-4" />
+                Especialidades solicitadas
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {request.providerSpecialty ? (
+                  request.providerSpecialty.split(',').map((spec, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 text-xs rounded-full"
+                    >
+                      {spec.trim()}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-500 dark:text-gray-400">No especificadas</span>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Detalles del proyecto
               </p>
               <div className="mt-2 space-y-2">
                 {request.budget && (
@@ -327,23 +408,18 @@ export default function RequestDetailPage() {
                     {request.budget.toLocaleString()}
                   </p>
                 )}
-                {request.location && (
+                {request.estimatedTime && (
                   <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                    📍 {request.location}
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    Tiempo estimado: {request.estimatedTime}
                   </p>
                 )}
                 {request.urgency && (
                   <p
                     className={`flex items-center gap-2 text-sm ${getUrgencyColor(request.urgency)}`}
                   >
-                    <Clock className="w-4 h-4" />
-                    {getUrgencyLabel(request.urgency)}
-                  </p>
-                )}
-                {request.estimatedTime && (
-                  <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    Tiempo estimado: {request.estimatedTime}
+                    <AlertCircle className="w-4 h-4" />
+                    Nivel de urgencia: {getUrgencyLabel(request.urgency)}
                   </p>
                 )}
               </div>
@@ -352,19 +428,61 @@ export default function RequestDetailPage() {
 
           {/* Descripción */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              📝 Descripción del proyecto
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-primary-500" />
+              Descripción del proyecto
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-              {request.description}
-            </p>
+            <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+              <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                {request.description}
+              </p>
+            </div>
           </div>
+
+          {/* Imágenes */}
+          {request.images && request.images.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-primary-500" />
+                Imágenes del proyecto ({request.images.length})
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {request.images.map((url, index) => (
+                  <div
+                    key={index}
+                    className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 cursor-pointer"
+                    onClick={() => window.open(url, '_blank')}
+                  >
+                    <img
+                      src={url}
+                      alt={`Imagen ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12"%3E❌%3C/text%3E%3C/svg%3E';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-white text-sm font-medium">Ver</span>
+                    </div>
+                    {/* ✅ Usar la variable imagesLength para TypeScript */}
+                    {request.images && (
+                      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                        {index + 1}/{request.images.length}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Respuesta del proveedor */}
           {request.response && (
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                💬 Respuesta del proveedor
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-green-500" />
+                Respuesta del proveedor
               </h3>
               <p className="text-gray-600 dark:text-gray-400">{request.response}</p>
               {request.whatsappContact && (
@@ -379,8 +497,9 @@ export default function RequestDetailPage() {
           {/* ✅ ACCIONES PARA PROVEEDOR */}
           {isProvider && request.status === 'pendiente' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-                📩 Responder a la solicitud
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                <Send className="w-4 h-4 text-primary-500" />
+                Responder a la solicitud
               </h3>
               <div className="space-y-4">
                 <textarea
@@ -431,14 +550,23 @@ export default function RequestDetailPage() {
           {isProvider && request.status === 'aceptado' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-                <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  Has aceptado esta solicitud. Ahora puedes marcar el trabajo como completado.
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                      Has aceptado esta solicitud
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      Puedes marcar el trabajo como completado cuando finalices
+                    </p>
+                  </div>
+                </div>
                 <button
                   onClick={() => handleStatusUpdate('completado')}
                   disabled={updating}
-                  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2"
+                  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2 text-sm"
                 >
                   {updating ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -455,10 +583,19 @@ export default function RequestDetailPage() {
           {isClient && request.status === 'aceptado' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-                <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
-                  <ThumbsUp className="w-4 h-4" />✅ El proveedor ha aceptado tu solicitud. Pronto
-                  comenzará el trabajo.
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <ThumbsUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                      ✅ El proveedor ha aceptado tu solicitud
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400">
+                      Pronto comenzará el trabajo. Mantente en contacto por WhatsApp
+                    </p>
+                  </div>
+                </div>
                 {request.response && (
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
                     <span className="font-medium">Respuesta:</span> {request.response}
@@ -478,10 +615,19 @@ export default function RequestDetailPage() {
           {isClient && request.status === 'completado' && (
             <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" />✅ ¡Trabajo completado! El proveedor ha
-                  finalizado el proyecto.
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                      ✅ ¡Trabajo completado!
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      El proveedor ha finalizado el proyecto
+                    </p>
+                  </div>
+                </div>
                 {canTestimonio && (
                   <button
                     onClick={() => setShowTestimonioModal(true)}
@@ -515,6 +661,48 @@ export default function RequestDetailPage() {
                 providerPhone={request.whatsappContact}
                 providerName={request.providerName}
               />
+            </div>
+          )}
+
+          {/* ✅ ESTADO PARA PROVEEDOR - CUANDO ESTÁ COMPLETADO */}
+          {isProvider && request.status === 'completado' && request.testimonio && (
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                    <Award className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                      ⭐ Nuevo testimonio recibido
+                    </p>
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                      El cliente te ha calificado con {request.testimonio.rating} estrellas
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-2 p-3 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    "{request.testimonio.comment}"
+                  </p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      // ✅ Usar optional chaining y valor por defecto
+                      const rating = request.testimonio?.rating || 0;
+                      return (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 ${
+                            star <= rating
+                              ? 'text-yellow-400 fill-current'
+                              : 'text-gray-300 dark:text-gray-600'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -1,9 +1,11 @@
+// app/profile/page.tsx
 'use client';
 
 import { IdentificationValidator } from '@/components/profile/IdentificationValidator';
 import { RegionSelector } from '@/components/ui/RegionSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
+import { uploadToCloudinary } from '@/lib/cloudinary/upload.service'; // ✅ Importar
 import { getUserProfile, ProfileData, updateUserProfile } from '@/lib/firebase/profile.service';
 import { autoVerifyProvider, getVerificationStatus } from '@/lib/firebase/verification.service';
 import { log } from '@/lib/utils/logger';
@@ -40,6 +42,9 @@ export default function ProfilePage() {
   const [isComplete, setIsComplete] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
 
+  // ✅ Estado para subida de foto
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
   const [formData, setFormData] = useState<ProfileData>({
     displayName: '',
     phone: '',
@@ -65,6 +70,7 @@ export default function ProfilePage() {
 
   const isInitialLoad = useRef(true);
   const isProvider = currentRole === 'provider';
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ============================================
   // CARGAR PERFIL
@@ -127,7 +133,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!isProvider) return;
 
-    // ✅ Calcular progreso - SOLO VISUAL
     const progress = getVerificationProgress(formData);
     setVerificationProgress(progress);
 
@@ -202,6 +207,51 @@ export default function ProfilePage() {
   }, []);
 
   // ============================================
+  // ✅ SUBIR FOTO DE PERFIL A CLOUDINARY
+  // ============================================
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten imágenes');
+      return;
+    }
+
+    // Validar tamaño (máx 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no puede superar 5MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      // ✅ Subir a Cloudinary
+      const url = await uploadToCloudinary(file, (progress) => {
+        // Opcional: mostrar progreso
+        console.log(`Progreso subida: ${progress}%`);
+      });
+
+      // ✅ Actualizar formulario
+      setFormData((prev) => ({
+        ...prev,
+        photoURL: url,
+      }));
+
+      toast.success('Foto de perfil actualizada');
+    } catch (error) {
+      console.error('Error subiendo foto:', error);
+      toast.error('Error al subir la foto de perfil');
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // ============================================
   // GUARDAR Y VERIFICAR - UN SOLO PASO
   // ============================================
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,7 +306,6 @@ export default function ProfilePage() {
               description: updateData.description || '',
             });
 
-            // ✅ Recargar estado de verificación
             const updated = await getVerificationStatus(user.uid);
             setVerification(updated);
 
@@ -266,7 +315,6 @@ export default function ProfilePage() {
                 duration: 3000,
               });
             } else {
-              // ✅ CORREGIDO: usar toast en lugar de toast.info
               toast('📋 Solicitud de verificación enviada', {
                 icon: '📋',
                 duration: 3000,
@@ -279,7 +327,6 @@ export default function ProfilePage() {
             setRequestingVerification(false);
           }
         } else {
-          // ✅ Si no está completo, mostrar qué falta
           const missing = getMissingVerificationFields(updateData);
           toast.error(
             `⚠️ Completa los siguientes campos para verificar tu cuenta:\n${missing.join('\n')}`,
@@ -336,14 +383,14 @@ export default function ProfilePage() {
         onSubmit={handleSubmit}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6"
       >
-        {/* Foto de perfil */}
+        {/* ✅ Foto de perfil con Cloudinary */}
         <div className="flex items-center gap-6">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center overflow-hidden">
               {formData.photoURL ? (
                 <img
                   src={formData.photoURL}
-                  alt={formData.displayName}
+                  alt={formData.displayName || 'Foto de perfil'}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
@@ -355,25 +402,38 @@ export default function ProfilePage() {
             </div>
             <button
               type="button"
-              className="absolute bottom-0 right-0 p-1.5 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="absolute bottom-0 right-0 p-1.5 bg-primary-600 text-white rounded-full hover:bg-primary-700 transition disabled:opacity-50"
               title="Cambiar foto"
             >
-              <Camera className="w-4 h-4" />
+              {uploadingPhoto ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Camera className="w-4 h-4" />
+              )}
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
           </div>
           <div className="flex-1">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Sube una foto de perfil profesional
+              {uploadingPhoto ? 'Subiendo foto...' : 'Sube una foto de perfil profesional'}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500">Ingresa la URL de la imagen</p>
-            <input
-              type="text"
-              name="photoURL"
-              value={formData.photoURL}
-              onChange={handleChange}
-              placeholder="https://..."
-              className="mt-2 w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-            />
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              Formatos: JPG, PNG, WEBP (máx. 5MB)
+            </p>
+            {formData.photoURL && !uploadingPhoto && (
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Foto subida correctamente
+              </p>
+            )}
           </div>
         </div>
 
@@ -653,7 +713,7 @@ export default function ProfilePage() {
         <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
           <button
             type="submit"
-            disabled={saving || requestingVerification}
+            disabled={saving || requestingVerification || uploadingPhoto}
             className="flex-1 px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {saving || requestingVerification ? (

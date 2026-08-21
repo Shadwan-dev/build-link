@@ -201,3 +201,55 @@ export interface RequestStats {
   averageResponseTime: number;
   averageCompletionTime: number;
 }
+export interface Request {
+  id: string;
+  clientId: string;
+  clientName: string;
+  providerId: string;
+  providerName: string;
+
+  // ✅ Campos de categoría mejorados
+  categoryId: string;
+  categoryName: string;
+  specialtyId?: string;
+  specialtyName?: string;
+
+  description: string;
+  status: RequestStatus;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  budget?: number;
+  location?: string;
+  urgency?: UrgencyLevel;
+  response?: string;
+  whatsappContact?: string;
+  estimatedTime?: string;
+  images?: string[];
+
+  clientEmail?: string;
+  clientPhone?: string;
+  providerEmail?: string;
+  providerPhone?: string;
+
+  testimonio?: TestimonioData;
+
+  // ✅ CAMPOS DE FILTROS Y UBICACIÓN
+  providerSpecialty?: string;
+  providerLocation?: string;
+  regionId?: string; // ✅ AÑADIR
+  provinceId?: string; // ✅ AÑADIR
+
+  // ✅ Campos adicionales para tracking
+  providerResponse?: {
+    message: string;
+    date: Timestamp;
+    estimatedStartDate?: Timestamp;
+    estimatedCompletionDate?: Timestamp;
+  };
+
+  clientFeedback?: {
+    rating: number;
+    comment: string;
+    date: Timestamp;
+  };
+}

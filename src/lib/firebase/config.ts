@@ -1,8 +1,8 @@
-import { log } from '@/lib/utils/logger';
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { Auth, browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { Functions, getFunctions } from 'firebase/functions';
+import { FirebaseStorage, getStorage } from 'firebase/storage'; // ✅ AÑADIR
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,38 +14,34 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// ✅ Inicializar app (evita duplicados en SSR)
+// ✅ Inicializar app
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// ✅ Servicios (solo en cliente)
+// ✅ Servicios
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let functions: Functions | null = null;
+let storage: FirebaseStorage | null = null; // ✅ NUEVO
 
 if (typeof window !== 'undefined') {
   try {
-    // ✅ Auth - Persistencia local
+    // ✅ Auth
     auth = getAuth(app);
-    setPersistence(auth, browserLocalPersistence)
-      .then(() => log.info('✅ Persistencia de Auth configurada'))
-      .catch((error) => log.warning('⚠️ Error setting auth persistence:', error));
+    setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
-    // ✅ Firestore - Configuración simple y estable
-    // getFirestore es suficiente para producción, sin persistencia offline
+    // ✅ Firestore
     db = getFirestore(app);
+
+    // ✅ Storage
+    storage = getStorage(app);
 
     // ✅ Functions
     functions = getFunctions(app);
 
-    // ✅ Solo log en desarrollo, no en producción
-    if (process.env.NODE_ENV === 'development') {
-      log.info('✅ Firebase inicializado correctamente');
-      log.info('📡 Modo: Online');
-    }
+    console.log('✅ Firebase inicializado correctamente');
   } catch (error) {
-    log.error('❌ Error inicializando Firebase:', error);
+    console.error('❌ Error inicializando Firebase:', error);
   }
 }
 
-// ✅ Exportaciones
-export { app, auth, db, functions };
+export { app, auth, db, functions, storage }; // ✅ EXPORTAR STORAGE

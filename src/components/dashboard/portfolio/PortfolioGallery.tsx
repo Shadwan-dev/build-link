@@ -1,6 +1,8 @@
+// components/PortfolioGallery.tsx
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { getImageUrl } from '@/lib/cloudinary/image.utils'; // ✅ Importar utilidad
 import {
   getProviderPortfolio,
   likePortfolioItem,
@@ -55,7 +57,7 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
     loadPortfolio();
   }, [providerId]);
 
-  // ✅ Cargar más
+  // ✅ Cargar más (loadMore)
   const loadMore = async () => {
     if (!hasMore || !lastDoc) return;
 
@@ -73,7 +75,7 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
     }
   };
 
-  // ✅ Dar like
+  // ✅ Dar like (handleLike)
   const handleLike = async (itemId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
@@ -84,9 +86,11 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
     try {
       await likePortfolioItem(itemId);
       setItems((prev) =>
-        prev.map((item) => (item.id === itemId ? { ...item, likes: item.likes + 1 } : item))
+        prev.map((item) => (item.id === itemId ? { ...item, likes: (item.likes || 0) + 1 } : item))
       );
+      toast.success('¡Like agregado!');
     } catch (error) {
+      console.error('Error al dar like:', error);
       toast.error('Error al dar like');
     }
   };
@@ -134,20 +138,22 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
     <>
       {/* Grid de portafolio */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div
             key={item.id}
             className="relative group rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 aspect-square cursor-pointer"
-            onClick={() => {
-              const index = items.indexOf(item);
-              openLightbox(item, index);
-            }}
+            onClick={() => openLightbox(item, index)}
           >
-            {/* Imagen */}
+            {/* ✅ Imagen optimizada con Cloudinary */}
             <img
-              src={item.coverImage || item.images[0]}
+              src={getImageUrl(item.coverImage || item.images?.[0] || '', {
+                width: 400,
+                height: 400,
+                crop: 'fill',
+              })}
               alt={item.title}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
             />
 
             {/* Overlay */}
@@ -157,14 +163,14 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
                 <div className="flex items-center gap-3 mt-1 text-xs text-white/80">
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
-                    {item.views}
+                    {item.views || 0}
                   </span>
                   <button
                     onClick={(e) => handleLike(item.id, e)}
                     className="flex items-center gap-1 hover:text-red-400 transition"
                   >
                     <Heart className="w-3 h-3" />
-                    {item.likes}
+                    {item.likes || 0}
                   </button>
                 </div>
               </div>
@@ -199,14 +205,18 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
             {/* Imagen */}
             <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
               <img
-                src={selectedItem.images[currentImageIndex]}
+                src={getImageUrl(selectedItem.images?.[currentImageIndex] || '', {
+                  width: 1200,
+                  height: 800,
+                  crop: 'fill',
+                })}
                 alt={selectedItem.title}
                 className="w-full h-full object-contain"
               />
             </div>
 
             {/* Navegación */}
-            {selectedItem.images.length > 1 && (
+            {selectedItem.images && selectedItem.images.length > 1 && (
               <>
                 <button
                   onClick={() => navigateLightbox(-1)}
@@ -256,11 +266,11 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
               <div className="flex items-center gap-4 mt-2 text-xs text-white/60">
                 <span className="flex items-center gap-1">
                   <Eye className="w-3 h-3" />
-                  {selectedItem.views} vistas
+                  {selectedItem.views || 0} vistas
                 </span>
                 <span className="flex items-center gap-1">
                   <Heart className="w-3 h-3" />
-                  {selectedItem.likes} likes
+                  {selectedItem.likes || 0} likes
                 </span>
               </div>
             </div>
