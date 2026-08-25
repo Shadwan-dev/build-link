@@ -1,3 +1,5 @@
+// types/provider.types.ts
+
 import { Timestamp } from 'firebase/firestore';
 
 export interface Provider {
@@ -9,9 +11,9 @@ export interface Provider {
   rating: number;
   totalRatings: number;
   location: string;
-  latitude?: number; // ✅ Para geolocalización
-  longitude?: number; // ✅ Para geolocalización
-  serviceRadius?: number; // ✅ Radio de servicio en km
+  latitude?: number;
+  longitude?: number;
+  serviceRadius?: number;
   experience: number;
   isActive: boolean;
   isVerified: boolean;
@@ -20,6 +22,25 @@ export interface Provider {
   verificationNotes?: string;
   photoURL: string;
   description: string;
+  // ✅ NUEVO: Testimonios del proveedor (opcional)
+  testimonios?: {
+    id: string;
+    clientName: string;
+    clientId: string;
+    rating: number;
+    comment: string;
+    categories: {
+      calidad: number;
+      puntualidad: number;
+      comunicacion: number;
+      precio: number;
+    };
+    createdAt: Timestamp;
+    portfolioItemId?: string;
+  }[];
+  // ✅ NUEVO: Campos de ubicación
+  regionId?: string;
+  provinceId?: string;
   availability: {
     monday?: { start: string; end: string }[];
     tuesday?: { start: string; end: string }[];
@@ -41,7 +62,7 @@ export interface ProviderFilters {
   search?: string;
   latitude?: number;
   longitude?: number;
-  radius?: number; // ✅ Filtro por radio de distancia
+  radius?: number;
   limit?: number;
   startAfter?: any;
 }

@@ -1,3 +1,5 @@
+// lib/firebase/provider.service.ts
+
 import { log } from '@/lib/utils/logger';
 import { Review } from '@/types/review.types';
 import {
@@ -12,6 +14,7 @@ import {
   query,
   QueryConstraint,
   serverTimestamp,
+  setDoc,
   startAfter,
   Timestamp,
   updateDoc,
@@ -52,6 +55,22 @@ export interface Provider {
   // ✅ NUEVOS CAMPOS DE UBICACIÓN
   regionId?: string;
   provinceId?: string;
+  // ✅ NUEVO: Testimonios del proveedor
+  testimonios?: {
+    id: string;
+    clientName: string;
+    clientId: string;
+    rating: number;
+    comment: string;
+    categories: {
+      calidad: number;
+      puntualidad: number;
+      comunicacion: number;
+      precio: number;
+    };
+    createdAt: Timestamp;
+    portfolioItemId?: string;
+  }[];
   // ✅ Campos para disponibilidad
   availability?: {
     monday?: { start: string; end: string }[];
@@ -190,7 +209,6 @@ export const searchProviders = async (
   options?: { limitCount?: number; lastDoc?: DocumentSnapshot }
 ): Promise<{ providers: Provider[]; lastDoc: DocumentSnapshot | null }> => {
   try {
-    // Primero obtener proveedores verificados
     const result = await getProviders(options);
     const term = searchTerm.toLowerCase().trim();
 
@@ -266,7 +284,6 @@ export const updateProviderRating = async (providerId: string): Promise<void> =>
   try {
     const dbInstance = getDb();
 
-    // ✅ Obtener todas las valoraciones del proveedor
     const reviewsQuery = query(
       collection(dbInstance, 'reviews'),
       where('providerId', '==', providerId),
@@ -277,7 +294,6 @@ export const updateProviderRating = async (providerId: string): Promise<void> =>
     const reviews = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Review);
 
     if (reviews.length === 0) {
-      // ✅ Sin valoraciones, resetear rating
       await updateDoc(doc(dbInstance, 'providers', providerId), {
         rating: 0,
         totalRatings: 0,
@@ -286,14 +302,10 @@ export const updateProviderRating = async (providerId: string): Promise<void> =>
       return;
     }
 
-    // ✅ Calcular promedio
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     const averageRating = totalRating / reviews.length;
-
-    // ✅ Calcular trabajos completados (de reviews verificadas)
     const completedJobs = reviews.filter((r) => r.verified).length;
 
-    // ✅ Actualizar proveedor
     await updateDoc(doc(dbInstance, 'providers', providerId), {
       rating: Number(averageRating.toFixed(1)),
       totalRatings: reviews.length,
@@ -376,7 +388,6 @@ export const getProvidersWithFilters = async (
       where('isActive', '==', true),
     ];
 
-    // ✅ Filtros opcionales
     if (filters.category) {
       constraints.push(where('specialties', 'array-contains', filters.category));
     }
@@ -389,7 +400,6 @@ export const getProvidersWithFilters = async (
       constraints.push(where('rating', '<=', filters.maxRating));
     }
 
-    // ✅ Ordenar por rating y limit
     constraints.push(orderBy('rating', 'desc'));
     constraints.push(limit(limitCount));
 
@@ -405,14 +415,12 @@ export const getProvidersWithFilters = async (
       providers.push({ uid: doc.id, ...doc.data() } as Provider);
     });
 
-    // ✅ Filtrar por ubicación en memoria (si se especifica)
     let filteredProviders = providers;
     if (filters.location) {
       const location = filters.location.toLowerCase().trim();
       filteredProviders = providers.filter((p) => p.location.toLowerCase().includes(location));
     }
 
-    // ✅ Filtrar por búsqueda en memoria
     if (filters.search) {
       const search = filters.search.toLowerCase().trim();
       filteredProviders = filteredProviders.filter(
@@ -431,22 +439,20 @@ export const getProvidersWithFilters = async (
     return { providers: [], lastDoc: null };
   }
 };
+
 // ============================================
 // 📍 BUSCAR PROVEEDORES POR UBICACIÓN
 // ============================================
 export const getProvidersByLocation = async (
   latitude: number,
   longitude: number,
-  radius: number = 10, // km
+  radius: number = 10,
   filters?: ProviderFilters
 ): Promise<Provider[]> => {
   try {
-    // ✅ Primero obtener todos los proveedores verificados
     const { providers } = await getProviders({ limitCount: 100 });
 
-    // ✅ Filtrar por distancia
     const filtered = providers.filter((provider) => {
-      // ✅ Verificar que el proveedor tenga coordenadas
       if (!provider.latitude || !provider.longitude) {
         return false;
       }
@@ -458,12 +464,10 @@ export const getProvidersByLocation = async (
         provider.longitude
       );
 
-      // ✅ Verificar si está dentro del radio
       const providerRadius = provider.serviceRadius || radius;
       return distance <= providerRadius;
     });
 
-    // ✅ Aplicar filtros adicionales
     let result = filtered;
 
     if (filters?.category) {
@@ -492,7 +496,7 @@ export const getProvidersByLocation = async (
 
 // ✅ Calcular distancia entre dos puntos (fórmula de Haversine)
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-  const R = 6371; // Radio de la Tierra en km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -506,15 +510,13 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 // ✅ Verificar disponibilidad del proveedor
-// ✅ Verificar disponibilidad del proveedor
 export const checkProviderAvailability = (
   provider: Provider,
   date: Date,
   time: string
 ): boolean => {
-  // ✅ Verificar que el proveedor tenga disponibilidad definida
   if (!provider.availability) {
-    return true; // Si no tiene definida disponibilidad, asumir que está disponible
+    return true;
   }
 
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -522,7 +524,7 @@ export const checkProviderAvailability = (
   const availability = provider.availability[dayName as keyof typeof provider.availability];
 
   if (!availability || availability.length === 0) {
-    return false; // Si no hay horario para ese día, no está disponible
+    return false;
   }
 
   return availability.some((slot) => {
@@ -539,12 +541,8 @@ export const getProvidersByRegion = async (
     const { providers } = await getProviders({ limitCount: 100 });
 
     return providers.filter((provider) => {
-      // ✅ Coincidencia por región
       if (provider.regionId !== regionId) return false;
-
-      // ✅ Si se especifica provincia, filtrar también
       if (provinceId && provider.provinceId !== provinceId) return false;
-
       return true;
     });
   } catch (error) {
@@ -552,6 +550,7 @@ export const getProvidersByRegion = async (
     return [];
   }
 };
+
 // ============================================
 // 🔍 BUSCAR PROVEEDORES POR ESPECIALIDAD Y UBICACIÓN
 // ============================================
@@ -564,11 +563,9 @@ export const searchProvidersBySpecialtyAndLocation = async (
     const dbInstance = getDb();
     let providers: Provider[] = [];
 
-    // ✅ 1. Obtener proveedores verificados
     const result = await getProviders({ limitCount: 100 });
     providers = result.providers;
 
-    // ✅ 2. Filtrar por especialidad
     if (specialty) {
       const specialtyLower = specialty.toLowerCase();
       providers = providers.filter((p) =>
@@ -576,12 +573,10 @@ export const searchProvidersBySpecialtyAndLocation = async (
       );
     }
 
-    // ✅ 3. Filtrar por región
     if (regionId) {
       providers = providers.filter((p) => p.regionId === regionId);
     }
 
-    // ✅ 4. Filtrar por provincia (si se especifica)
     if (provinceId) {
       providers = providers.filter((p) => p.provinceId === provinceId);
     }
@@ -607,7 +602,6 @@ export const notifyFilteredProviders = async (
   try {
     const { createNotification } = await import('./notification.service');
 
-    // ✅ Enviar notificación a cada proveedor
     const notifications = providers.map((provider) =>
       createNotification(
         provider.uid,
@@ -637,4 +631,69 @@ export const getProviderContacts = async (
       phone: p.phone,
       name: p.displayName,
     }));
+};
+
+// ============================================
+// ✅ CREAR PORTAFOLIO DESDE TESTIMONIO (CORREGIDO)
+// ============================================
+export const createPortfolioFromTestimonio = async (
+  providerId: string,
+  testimonio: {
+    rating: number;
+    comment: string;
+    categories: {
+      calidad: number;
+      puntualidad: number;
+      comunicacion: number;
+      precio: number;
+    };
+    clientName: string;
+    clientId: string;
+    requestId: string;
+  },
+  requestData: {
+    categoryName: string;
+    description: string;
+    images: string[];
+    location?: string;
+  }
+): Promise<string> => {
+  try {
+    const dbInstance = getDb();
+    // ✅ Usar 'portfolio' directamente en lugar de COLLECTION_NAME
+    const docRef = doc(collection(dbInstance, 'portfolio'));
+    const now = serverTimestamp();
+
+    const itemData = {
+      providerId,
+      title: `Trabajo realizado - ${requestData.categoryName}`,
+      description: requestData.description,
+      category: requestData.categoryName,
+      images: requestData.images || [],
+      coverImage: requestData.images?.[0] || '',
+      location: requestData.location || '',
+      clientName: testimonio.clientName,
+      clientFeedback: testimonio.comment,
+      testimonio: {
+        rating: testimonio.rating,
+        comment: testimonio.comment,
+        categories: testimonio.categories,
+        clientName: testimonio.clientName,
+        clientId: testimonio.clientId,
+        createdAt: now,
+      },
+      isPublished: true,
+      views: 0,
+      likes: 0,
+      createdAt: now as Timestamp,
+      updatedAt: now as Timestamp,
+    };
+
+    await setDoc(docRef, itemData);
+    log.info('📸 Portafolio creado desde testimonio:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    log.error('❌ Error creando portafolio desde testimonio:', error);
+    throw new Error('Error al crear el portafolio');
+  }
 };

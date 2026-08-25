@@ -7,6 +7,7 @@ import { WhatsAppContact } from '@/components/dashboard/requests/WhatsAppContact
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import { getImageUrl } from '@/lib/cloudinary/image.utils';
+import { createPortfolioFromTestimonio } from '@/lib/firebase/provider.service';
 import { getRequestById, updateRequestStatus } from '@/lib/firebase/requests.service';
 import { log } from '@/lib/utils/logger';
 import { Request, TestimonioData } from '@/types/request.types';
@@ -140,14 +141,43 @@ export default function RequestDetailPage() {
     }
   };
 
-  // ✅ ENVIAR TESTIMONIO
+  // app/dashboard/requests/[id]/page.tsx
+
+  // ✅ En handleTestimonioSubmit, agregar creación de portafolio
   const handleTestimonioSubmit = async (testimonioData: TestimonioData) => {
     if (!request) return;
 
     try {
+      // ✅ Guardar testimonio en la solicitud
       await updateRequestStatus(request.id, 'completado', undefined, undefined, {
         testimonio: testimonioData,
       });
+
+      // ✅ CREAR PORTAFOLIO DESDE EL TESTIMONIO
+      if (request.images && request.images.length > 0) {
+        try {
+          await createPortfolioFromTestimonio(
+            request.providerId,
+            {
+              ...testimonioData,
+              clientName: request.clientName,
+              clientId: request.clientId,
+              requestId: request.id,
+            },
+            {
+              categoryName: request.categoryName,
+              description: request.description,
+              images: request.images,
+              location: request.location,
+            }
+          );
+          toast.success('📸 ¡Trabajo agregado a tu portafolio!');
+        } catch (portfolioError) {
+          log.error('Error creando portafolio:', portfolioError);
+          // No falla la solicitud, solo muestra advertencia
+          toast.success('⭐ Testimonio guardado, pero hubo un error al crear el portafolio');
+        }
+      }
 
       toast.success('⭐ ¡Gracias por tu testimonio!');
       setShowTestimonioModal(false);

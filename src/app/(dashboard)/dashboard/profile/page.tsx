@@ -23,6 +23,7 @@ import {
   Loader2,
   Save,
   Shield,
+  Star,
   User,
 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -661,6 +662,44 @@ export default function ProfilePage() {
                 }}
               />
             </div>
+            {isProvider && profile?.testimonios && profile.testimonios.length > 0 && (
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                  Testimonios de clientes ({profile.testimonios.length})
+                </h3>
+                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                  {profile.testimonios.map((testimonio: any, index: number) => (
+                    <div key={index} className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {testimonio.clientName}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-4 h-4 ${
+                                star <= testimonio.rating
+                                  ? 'text-yellow-400 fill-current'
+                                  : 'text-gray-300 dark:text-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 italic">
+                        "{testimonio.comment}"
+                      </p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        <span>⭐ Calidad: {testimonio.categories?.calidad || 0}/5</span>
+                        <span>⏰ Puntualidad: {testimonio.categories?.puntualidad || 0}/5</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* ✅ Mensaje informativo */}
             {verification?.verificationStatus === 'approved' ? (

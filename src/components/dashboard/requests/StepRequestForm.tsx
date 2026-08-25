@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import { CATEGORIES } from '@/lib/constants/categories';
 import { createRequest } from '@/lib/firebase/requests.service';
-import { log } from '@/lib/utils/logger';
 import { ArrowLeft, ArrowRight, CheckCircle, Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -124,10 +123,12 @@ export const StepRequestForm = ({
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  // ✅ Enviar solicitud - CORREGIDO CON IMÁGENES
+  // components/dashboard/requests/StepRequestForm.tsx
+
+  // ✅ En handleSubmit, asegurar que images se pasa correctamente
   const handleSubmit = async () => {
-    // ✅ Debug: Verificar imágenes antes de enviar
-    console.log('📸 Imágenes en formData:', formData.images);
+    console.log('🔍 === INICIO handleSubmit ===');
+    console.log('📸 Imágenes en formData ANTES de enviar:', formData.images);
     console.log('📸 Cantidad de imágenes:', formData.images.length);
 
     if (!validateStep(currentStep)) return;
@@ -138,6 +139,11 @@ export const StepRequestForm = ({
 
     setLoading(true);
     try {
+      // ✅ Asegurar que images siempre sea un array
+      const imagesToSave = formData.images || [];
+      console.log('📸 Guardando imágenes:', imagesToSave);
+      console.log('📸 Cantidad a guardar:', imagesToSave.length);
+
       // ✅ Preparar datos para crear la solicitud
       const requestData = {
         clientId: user.uid,
@@ -152,8 +158,8 @@ export const StepRequestForm = ({
         description: formData.description,
         location: formData.locationData.address || '',
         urgency: formData.urgency,
-        // ✅ ¡IMPORTANTE! Las imágenes subidas a Cloudinary
-        images: formData.images || [],
+        // ✅ ¡CRÍTICO! Guardar las imágenes como array de strings
+        images: imagesToSave,
         // ✅ Guardar metadatos adicionales
         providerSpecialty: formData.providers
           .map((p) => p.specialties)
@@ -162,25 +168,22 @@ export const StepRequestForm = ({
         providerLocation: formData.locationData.provinceId,
         regionId: formData.locationData.regionId,
         provinceId: formData.locationData.provinceId,
-        // ✅ Campos adicionales opcionales
         estimatedTime: '',
         timeline: '',
         specialtyId: '',
         specialtyName: '',
       };
 
-      // ✅ Debug: Verificar que las imágenes van en la solicitud
-      console.log('📸 Enviando a createRequest con imágenes:', requestData.images.length);
-      console.log('📸 URLs de imágenes:', requestData.images);
+      console.log('📦 RequestData COMPLETO:', JSON.stringify(requestData, null, 2));
+      console.log('📸 URLs de imágenes en requestData:', requestData.images);
 
       const requestId = await createRequest(requestData);
-
       toast.success('📩 Solicitud enviada correctamente');
       onSuccess?.();
       onClose();
       router.push(`/dashboard/requests/${requestId}`);
     } catch (error: any) {
-      log.error('❌ Error en handleSubmit:', error);
+      console.error('❌ Error en handleSubmit:', error);
       toast.error(error.message || 'Error al enviar la solicitud');
     } finally {
       setLoading(false);

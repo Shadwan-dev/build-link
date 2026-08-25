@@ -3,24 +3,40 @@ import { Timestamp } from 'firebase/firestore';
 // ============================================
 // 📸 ITEM DEL PORTAFOLIO
 // ============================================
+// types/portfolio.types.ts
+
 export interface PortfolioItem {
   id: string;
-  providerId: string; // ID del proveedor
-  title: string; // Título del trabajo
-  description: string; // Descripción detallada
-  category: string; // Categoría (Construcción, Carpintería, etc.)
-  images: string[]; // URLs de las imágenes
-  coverImage?: string; // Imagen principal (si no se especifica, usa la primera)
-  location?: string; // Ubicación del trabajo
-  clientName?: string; // Nombre del cliente
-  clientFeedback?: string; // Feedback del cliente
-  year?: number; // Año en que se realizó
-  tags?: string[]; // Etiquetas adicionales
-  isPublished: boolean; // Si está publicado o es borrador
-  views: number; // Contador de vistas
-  likes: number; // Contador de likes
+  providerId: string;
+  title: string;
+  description: string;
+  category: string;
+  images: string[];
+  coverImage?: string;
+  location?: string;
+  clientName?: string;
+  clientFeedback?: string;
+  year?: number;
+  tags?: string[];
+  isPublished: boolean;
+  views: number;
+  likes: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  // ✅ NUEVO: Testimonio completo
+  testimonio?: {
+    rating: number;
+    comment: string;
+    categories: {
+      calidad: number;
+      puntualidad: number;
+      comunicacion: number;
+      precio: number;
+    };
+    clientName: string;
+    clientId: string;
+    createdAt: Timestamp;
+  };
 }
 
 // ============================================

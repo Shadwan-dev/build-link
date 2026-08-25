@@ -1,3 +1,5 @@
+// lib/firebase/portfolio.service.ts
+
 import { log } from '@/lib/utils/logger';
 import { PortfolioItem, PortfolioStats } from '@/types/portfolio.types';
 import {
@@ -54,6 +56,70 @@ export const createPortfolioItem = async (
   } catch (error) {
     log.error('❌ Error creando item de portafolio:', error);
     throw new Error('Error al crear el item de portafolio');
+  }
+};
+
+// ============================================
+// ✅ CREAR PORTAFOLIO DESDE TESTIMONIO
+// ============================================
+export const createPortfolioFromTestimonio = async (
+  providerId: string,
+  testimonio: {
+    rating: number;
+    comment: string;
+    categories: {
+      calidad: number;
+      puntualidad: number;
+      comunicacion: number;
+      precio: number;
+    };
+    clientName: string;
+    clientId: string;
+    requestId: string;
+  },
+  requestData: {
+    categoryName: string;
+    description: string;
+    images: string[];
+    location?: string;
+  }
+): Promise<string> => {
+  try {
+    const dbInstance = getDb();
+    const docRef = doc(collection(dbInstance, COLLECTION_NAME)); // ✅ COLLECTION_NAME definido arriba
+    const now = serverTimestamp();
+
+    const itemData = {
+      providerId,
+      title: `Trabajo realizado - ${requestData.categoryName}`,
+      description: requestData.description,
+      category: requestData.categoryName,
+      images: requestData.images || [],
+      coverImage: requestData.images?.[0] || '',
+      location: requestData.location || '',
+      clientName: testimonio.clientName,
+      clientFeedback: testimonio.comment,
+      testimonio: {
+        rating: testimonio.rating,
+        comment: testimonio.comment,
+        categories: testimonio.categories,
+        clientName: testimonio.clientName,
+        clientId: testimonio.clientId,
+        createdAt: now,
+      },
+      isPublished: true,
+      views: 0,
+      likes: 0,
+      createdAt: now as Timestamp,
+      updatedAt: now as Timestamp,
+    };
+
+    await setDoc(docRef, itemData);
+    log.info('📸 Portafolio creado desde testimonio:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    log.error('❌ Error creando portafolio desde testimonio:', error);
+    throw new Error('Error al crear el portafolio');
   }
 };
 

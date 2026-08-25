@@ -20,7 +20,7 @@ interface ProviderCardProps {
   provider: Provider;
   variant?: 'compact' | 'detailed';
   onClick?: () => void;
-  showContactButton?: boolean; // ✅ Nuevo: controlar visibilidad del botón
+  showContactButton?: boolean;
 }
 
 export const ProviderCard = ({
@@ -137,6 +137,37 @@ export const ProviderCard = ({
               <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                 {provider.description}
               </p>
+            )}
+
+            {/* ✅ Testimonios del proveedor */}
+            {provider.testimonios && provider.testimonios.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                  ⭐ Último testimonio
+                </h4>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-3 h-3 ${
+                            star <= (provider.testimonios?.[0]?.rating || 0)
+                              ? 'text-yellow-400 fill-current'
+                              : 'text-gray-300 dark:text-gray-600'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {provider.testimonios?.[0]?.clientName || 'Cliente'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 italic">
+                    "{provider.testimonios?.[0]?.comment || 'Sin comentario'}"
+                  </p>
+                </div>
+              </div>
             )}
 
             {/* Detalles */}

@@ -1,8 +1,9 @@
-// components/PortfolioGallery.tsx
+// components/dashboard/portfolio/PortfolioGallery.tsx
+
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { getImageUrl } from '@/lib/cloudinary/image.utils'; // ✅ Importar utilidad
+import { getImageUrl } from '@/lib/cloudinary/image.utils';
 import {
   getProviderPortfolio,
   likePortfolioItem,
@@ -17,6 +18,7 @@ import {
   Heart,
   Loader2,
   MapPin,
+  Star,
   User,
   X,
 } from 'lucide-react';
@@ -57,7 +59,7 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
     loadPortfolio();
   }, [providerId]);
 
-  // ✅ Cargar más (loadMore)
+  // ✅ Cargar más
   const loadMore = async () => {
     if (!hasMore || !lastDoc) return;
 
@@ -75,7 +77,7 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
     }
   };
 
-  // ✅ Dar like (handleLike)
+  // ✅ Dar like
   const handleLike = async (itemId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!user) {
@@ -101,7 +103,6 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
     setCurrentImageIndex(index);
     setLightboxOpen(true);
 
-    // ✅ Registrar vista
     viewPortfolioItem(item.id).catch(() => {});
   };
 
@@ -110,6 +111,22 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
     if (!selectedItem) return;
     const total = selectedItem.images.length;
     setCurrentImageIndex((prev) => (prev + direction + total) % total);
+  };
+
+  // ✅ Renderizar estrellas
+  const renderStars = (rating: number) => {
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`w-3 h-3 ${
+              star <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300 dark:text-gray-600'
+            }`}
+          />
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -144,7 +161,6 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
             className="relative group rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 aspect-square cursor-pointer"
             onClick={() => openLightbox(item, index)}
           >
-            {/* ✅ Imagen optimizada con Cloudinary */}
             <img
               src={getImageUrl(item.coverImage || item.images?.[0] || '', {
                 width: 400,
@@ -156,7 +172,6 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
               loading="lazy"
             />
 
-            {/* Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <h4 className="text-white font-semibold text-sm truncate">{item.title}</h4>
@@ -172,6 +187,12 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
                     <Heart className="w-3 h-3" />
                     {item.likes || 0}
                   </button>
+                  {item.testimonio && (
+                    <span className="flex items-center gap-1 text-yellow-400">
+                      <Star className="w-3 h-3 fill-current" />
+                      {item.testimonio.rating}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -191,7 +212,7 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
         </div>
       )}
 
-      {/* ✅ Lightbox */}
+      {/* ✅ Lightbox con testimonio */}
       {lightboxOpen && selectedItem && (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
           <button
@@ -202,7 +223,6 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
           </button>
 
           <div className="relative w-full max-w-4xl">
-            {/* Imagen */}
             <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
               <img
                 src={getImageUrl(selectedItem.images?.[currentImageIndex] || '', {
@@ -215,7 +235,6 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
               />
             </div>
 
-            {/* Navegación */}
             {selectedItem.images && selectedItem.images.length > 1 && (
               <>
                 <button
@@ -233,10 +252,36 @@ export const PortfolioGallery = ({ providerId }: PortfolioGalleryProps) => {
               </>
             )}
 
-            {/* Info */}
+            {/* ✅ Info con testimonio */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-6">
               <h3 className="text-white text-xl font-semibold">{selectedItem.title}</h3>
               <p className="text-white/80 text-sm mt-1">{selectedItem.description}</p>
+
+              {/* ✅ Testimonio del cliente */}
+              {selectedItem.testimonio && (
+                <div className="mt-3 p-3 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-yellow-400 text-sm font-medium">⭐ Testimonio</span>
+                    <span className="text-white/60 text-xs">
+                      • {selectedItem.testimonio.clientName}
+                    </span>
+                  </div>
+                  <p className="text-white/90 text-sm italic">
+                    "{selectedItem.testimonio.comment}"
+                  </p>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-white/60">
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                      {selectedItem.testimonio.rating}/5
+                    </span>
+                    <span>
+                      💬 Comunicación: {selectedItem.testimonio.categories.comunicacion}/5
+                    </span>
+                    <span>⏰ Puntualidad: {selectedItem.testimonio.categories.puntualidad}/5</span>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-white/60">
                 {selectedItem.category && (
                   <span className="flex items-center gap-1">📂 {selectedItem.category}</span>
