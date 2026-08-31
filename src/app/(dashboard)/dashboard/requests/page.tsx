@@ -106,6 +106,11 @@ export default function RequestsPage() {
     rechazado: requests.filter((r) => r.status === 'rechazado').length,
     'en-progreso': requests.filter((r) => r.status === 'en-progreso').length,
   };
+  console.log('📸 ANTES DE RENDERIZAR - requests:', requests);
+  console.log(
+    '📸 ANTES DE RENDERIZAR - requests con imágenes:',
+    requests.filter((r) => r.images && r.images.length > 0)
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">

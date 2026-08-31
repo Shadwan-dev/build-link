@@ -1,3 +1,5 @@
+// lib/firebase/messaging.config.ts
+
 import { log } from '@/lib/utils/logger';
 import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
 import { app } from './config';
@@ -6,12 +8,16 @@ import { app } from './config';
 let messaging: any = null;
 
 if (typeof window !== 'undefined' && 'Notification' in window) {
-  // ✅ Verificar si Firebase Messaging está soportado
   isSupported()
     .then((supported) => {
       if (supported) {
-        messaging = getMessaging(app);
-        log.info('✅ Firebase Messaging soportado');
+        try {
+          messaging = getMessaging(app);
+          log.info('✅ Firebase Messaging soportado');
+        } catch (error) {
+          log.warning('⚠️ Error inicializando Messaging:', error);
+          messaging = null;
+        }
       } else {
         log.info('⚠️ Firebase Messaging no soportado en este navegador');
       }
@@ -30,7 +36,7 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       return null;
     }
 
-    // ✅ Verificar si estamos en un entorno seguro (HTTPS o localhost)
+    // ✅ Verificar si estamos en un entorno seguro
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
       log.warning('⚠️ Las notificaciones requieren HTTPS');
       return null;
@@ -38,7 +44,6 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
 
     // ✅ Solicitar permiso
     const permission = await Notification.requestPermission();
-
     if (permission !== 'granted') {
       log.warning('⚠️ Permiso de notificaciones denegado');
       return null;
@@ -50,18 +55,55 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       return null;
     }
 
-    // ✅ Obtener token
-    const token = await getToken(messaging, {
-      vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
-    });
+    // ✅ Obtener y limpiar VAPID Key
+    let vapidKey = process.env.NEXT_PUBLIC_VAPID_KEY;
 
-    if (token) {
-      log.info('✅ Token FCM obtenido:', token);
-      return token;
+    // ✅ Si no hay VAPID Key, desactivar notificaciones
+    if (!vapidKey || vapidKey.trim() === '') {
+      log.warning('⚠️ VAPID Key no configurada, notificaciones desactivadas');
+      return null;
     }
 
-    log.warning('⚠️ No se pudo obtener token FCM');
-    return null;
+    // ✅ Limpiar caracteres extraños
+    vapidKey = vapidKey.trim().replace(/\s/g, '').replace(/["']/g, '');
+
+    // ✅ Validar que la clave tenga el formato correcto (debe empezar con B o b)
+    if (!vapidKey.match(/^[A-Za-z0-9_-]+$/)) {
+      log.error('❌ VAPID Key contiene caracteres inválidos');
+      console.warn('⚠️ VAPID Key inválida, notificaciones desactivadas');
+      return null;
+    }
+
+    // ✅ Intentar obtener token
+    try {
+      const token = await getToken(messaging, {
+        vapidKey: vapidKey,
+      });
+
+      if (token) {
+        log.info('✅ Token FCM obtenido:', token);
+        return token;
+      }
+
+      log.warning('⚠️ No se pudo obtener token FCM');
+      return null;
+    } catch (tokenError: any) {
+      // ✅ Manejar errores específicos de VAPID
+      if (
+        tokenError.message?.includes('InvalidAccessError') ||
+        tokenError.message?.includes('public key') ||
+        tokenError.code === 'messaging/invalid-vapid-key'
+      ) {
+        log.error(
+          '❌ VAPID Key inválida. Verifica que sea correcta y no tenga caracteres extraños.'
+        );
+        console.warn('⚠️ Las notificaciones push están desactivadas debido a VAPID Key inválida.');
+        return null;
+      }
+
+      log.error('❌ Error obteniendo token FCM:', tokenError);
+      return null;
+    }
   } catch (error) {
     log.error('❌ Error solicitando permiso de notificaciones:', error);
     return null;
@@ -72,10 +114,15 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
 export const onMessageListener = (): Promise<any> => {
   return new Promise((resolve) => {
     if (messaging) {
-      onMessage(messaging, (payload) => {
-        log.info('📩 Mensaje recibido en primer plano:', payload);
-        resolve(payload);
-      });
+      try {
+        onMessage(messaging, (payload) => {
+          log.info('📩 Mensaje recibido en primer plano:', payload);
+          resolve(payload);
+        });
+      } catch (error) {
+        log.warning('⚠️ Error configurando listener de mensajes:', error);
+        resolve(null);
+      }
     } else {
       resolve(null);
     }
@@ -85,7 +132,6 @@ export const onMessageListener = (): Promise<any> => {
 // ✅ Guardar token en Firestore
 export const saveNotificationToken = async (userId: string, token: string): Promise<void> => {
   try {
-    // ✅ Importar Firestore
     const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
     const { db } = await import('./config');
 

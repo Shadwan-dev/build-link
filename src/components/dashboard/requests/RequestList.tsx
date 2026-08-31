@@ -1,3 +1,4 @@
+// components/dashboard/requests/RequestList.tsx
 'use client';
 
 import { Request } from '@/types/request.types';
@@ -21,6 +22,19 @@ export const RequestList = ({
   showActions = false,
 }: RequestListProps) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+
+  // ✅ LOG PARA VER LAS SOLICITUDES
+  console.log('📸 RequestList - Total requests:', requests.length);
+  requests.forEach((req, index) => {
+    console.log(
+      `📸 RequestList - [${index}] ID: ${req.id}, Categoría: ${req.categoryName}, Images:`,
+      req.images
+    );
+    console.log(`📸 RequestList - [${index}] Tiene imágenes?`, req.images && req.images.length > 0);
+    if (req.images && req.images.length > 0) {
+      console.log(`📸 RequestList - [${index}] Primera imagen:`, req.images[0]);
+    }
+  });
 
   if (loading) {
     return (
@@ -47,7 +61,7 @@ export const RequestList = ({
 
   return (
     <div className="space-y-4">
-      {/* ✅ Control de vista */}
+      {/* Control de vista */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {requests.length} {requests.length === 1 ? 'solicitud' : 'solicitudes'}
@@ -76,16 +90,20 @@ export const RequestList = ({
         </div>
       </div>
 
-      {/* ✅ Lista de solicitudes */}
+      {/* Lista de solicitudes */}
       <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-3'}>
-        {requests.map((request) => (
-          <RequestCard
-            key={request.id}
-            request={request}
-            onStatusChange={onStatusChange}
-            showActions={showActions}
-          />
-        ))}
+        {requests.map((request) => {
+          console.log('📋 RequestList - Renderizando request:', request.id);
+          console.log('📋 RequestList - images:', request.images);
+          return (
+            <RequestCard
+              key={request.id}
+              request={request}
+              onStatusChange={onStatusChange}
+              showActions={showActions}
+            />
+          );
+        })}
       </div>
     </div>
   );

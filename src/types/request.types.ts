@@ -86,6 +86,8 @@ export interface Request {
   clientPhone?: string;
   providerEmail?: string;
   providerPhone?: string;
+  regionId?: string; // ✅ Asegurar que existe
+  provinceId?: string; // ✅ Asegurar que existe
 
   // ✅ Testimonio - OBJETO COMPLETO
   testimonio?: TestimonioData;

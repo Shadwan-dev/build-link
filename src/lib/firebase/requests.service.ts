@@ -801,3 +801,77 @@ export const deleteRequestPermanently = async (
     throw new Error(error instanceof Error ? error.message : 'Error al eliminar la solicitud');
   }
 };
+
+// ============================================
+//  EDITAR SOLICITUD ENVIADA
+// ============================================
+
+export const updateRequest = async (
+  requestId: string,
+  userId: string, // ✅ Añadir userId como parámetro
+  data: Partial<CreateRequestInput>
+): Promise<void> => {
+  try {
+    if (!requestId) throw new Error('El ID de la solicitud es requerido');
+    if (!userId) throw new Error('El ID del usuario es requerido');
+
+    const dbInstance = getDb();
+    const docRef = doc(dbInstance, COLLECTION_NAME, requestId);
+
+    // ✅ Verificar que la solicitud existe
+    const request = await getRequestById(requestId);
+    if (!request) {
+      throw new Error('Solicitud no encontrada');
+    }
+
+    // ✅ Verificar que el usuario es el cliente
+    if (request.clientId !== userId) {
+      throw new Error('No tienes permiso para editar esta solicitud');
+    }
+
+    // ✅ Verificar que está pendiente
+    if (request.status !== 'pendiente') {
+      throw new Error('Solo se pueden editar solicitudes pendientes');
+    }
+
+    // ✅ Datos a actualizar
+    const updateData: any = {
+      updatedAt: serverTimestamp(),
+    };
+
+    // ✅ Solo actualizar campos que vienen en data
+    const allowedFields = [
+      'categoryId',
+      'categoryName',
+      'description',
+      'location',
+      'images',
+      'regionId',
+      'provinceId',
+      'urgency',
+      'budget',
+      'estimatedTime',
+    ];
+
+    allowedFields.forEach((field) => {
+      if (data[field as keyof CreateRequestInput] !== undefined) {
+        updateData[field] = data[field as keyof CreateRequestInput];
+      }
+    });
+
+    await updateDoc(docRef, updateData);
+    log.info(`✅ Solicitud ${requestId} actualizada`);
+
+    // ✅ Notificar al cliente
+    await createNotification(
+      request.clientId,
+      '✏️ Solicitud actualizada',
+      'Tu solicitud ha sido actualizada correctamente',
+      'response',
+      `/dashboard/requests/${requestId}`
+    );
+  } catch (error) {
+    log.error('❌ Error actualizando solicitud:', error);
+    throw new Error(error instanceof Error ? error.message : 'Error al actualizar la solicitud');
+  }
+};

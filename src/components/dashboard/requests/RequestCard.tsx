@@ -1,7 +1,7 @@
 // components/dashboard/requests/RequestCard.tsx
-
 'use client';
 
+import { getImageUrl } from '@/lib/cloudinary/image.utils';
 import { Request } from '@/types/request.types';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import { es } from 'date-fns/locale/es';
@@ -9,15 +9,16 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
+  Edit2,
   Image as ImageIcon,
   MapPin,
   User,
   XCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { DeleteRequestButton } from './DeleteRequestButton';
-// ✅ Importar utilidad de Cloudinary
-import { getImageUrl } from '@/lib/cloudinary/image.utils';
+import { EditRequestModal } from './EditRequestModal';
 
 interface RequestCardProps {
   request: Request;
@@ -32,14 +33,25 @@ export const RequestCard = ({
   onStatusChange,
   showActions = false,
 }: RequestCardProps) => {
+  const [showEditModal, setShowEditModal] = useState(false);
   const router = useRouter();
 
   const isProvider = role === 'provider';
   const isClient = role === 'client';
 
-  // ✅ Verificar si tiene imágenes
   const hasImages = request.images && request.images.length > 0;
   const firstImage = hasImages ? request.images![0] : null;
+  const showEditButton = isClient && request.status === 'pendiente';
+
+  let optimizedImage = null;
+  if (firstImage) {
+    try {
+      optimizedImage = getImageUrl(firstImage, { width: 200, height: 200, crop: 'fill' });
+    } catch (error) {
+      console.error('❌ Error generando URL optimizada:', error);
+      optimizedImage = firstImage;
+    }
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -98,20 +110,26 @@ export const RequestCard = ({
       className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all p-4 md:p-6 cursor-pointer relative"
       onClick={handleCardClick}
     >
-      {/* ✅ Layout con imagen */}
       <div className="flex flex-col sm:flex-row gap-4">
         {/* ✅ Imagen de la solicitud */}
         <div className="sm:w-24 sm:h-24 flex-shrink-0">
-          {firstImage ? (
+          {optimizedImage ? (
             <img
-              src={getImageUrl(firstImage, { width: 200, height: 200, crop: 'fill' })}
+              src={optimizedImage}
               alt={request.categoryName || 'Imagen de solicitud'}
               className="w-full h-full object-cover rounded-lg border border-gray-200 dark:border-gray-600"
               loading="lazy"
               onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12"%3E📸%3C/text%3E%3C/svg%3E';
+                const target = e.target as HTMLImageElement;
+                console.error('❌ Error cargando imagen optimizada:', optimizedImage);
+                if (firstImage) {
+                  target.src = firstImage;
+                } else {
+                  target.src =
+                    'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12"%3E📸%3C/text%3E%3C/svg%3E';
+                }
               }}
+              onLoad={() => console.log('✅ Imagen cargada correctamente:', optimizedImage)}
             />
           ) : (
             <div className="w-full h-full bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-600">
@@ -145,7 +163,7 @@ export const RequestCard = ({
               </p>
             </div>
 
-            {/* ✅ Acciones para proveedor */}
+            {/* Acciones para proveedor */}
             {showActions && request.status === 'pendiente' && onStatusChange && (
               <div className="flex gap-2 flex-shrink-0">
                 <button
@@ -169,6 +187,28 @@ export const RequestCard = ({
                   Rechazar
                 </button>
               </div>
+            )}
+            {showEditButton && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowEditModal(true);
+                }}
+                className="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                title="Editar solicitud"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+            )}
+            {showEditModal && (
+              <EditRequestModal
+                request={request}
+                onClose={() => setShowEditModal(false)}
+                onSuccess={() => {
+                  // Recargar o actualizar la lista
+                  window.location.reload();
+                }}
+              />
             )}
 
             {/* Botón de eliminar para cliente */}
