@@ -1,7 +1,7 @@
 // app/dashboard/requests/new/page.tsx
 'use client';
 
-import { CategoryIcon } from '@/components/ui/CategoryIcon';
+import { ProviderListSelector } from '@/components/dashboard/requests/ProviderListSelector';
 import { useAuth } from '@/contexts/AuthContext';
 import { uploadToCloudinary } from '@/lib/cloudinary/upload.service';
 import { CATEGORIES } from '@/lib/constants/categories';
@@ -32,6 +32,8 @@ export default function NewRequestPage() {
     description: '',
     whatsapp: '',
     imageUrl: '',
+    selectedProviders: [] as string[],
+    urgency: 'normal' as UrgencyLevel,
   });
 
   // ✅ Obtener provincias según región seleccionada
@@ -96,6 +98,10 @@ export default function NewRequestPage() {
       toast.error('Selecciona una comuna');
       return;
     }
+    if (formData.selectedProviders.length === 0) {
+      toast.error('Selecciona al menos un maestro');
+      return;
+    }
     if (!formData.description.trim() || formData.description.length < 10) {
       toast.error('La descripción debe tener al menos 10 caracteres');
       return;
@@ -112,32 +118,45 @@ export default function NewRequestPage() {
 
     setLoading(true);
     try {
-      const requestData = {
-        clientId: user.uid,
-        clientName: user.displayName || 'Usuario',
-        clientEmail: user.email || '',
-        clientPhone: user.phone || '',
-        providerId: 'general',
-        providerName: 'Proveedor general',
-        categoryId: formData.categoryId,
-        categoryName: formData.categoryName,
-        description: formData.description,
-        location: formData.provinceName || '',
-        urgency: 'normal' as UrgencyLevel,
-        images: formData.imageUrl ? [formData.imageUrl] : [],
-        regionId: formData.regionId,
-        provinceId: formData.provinceId,
-        whatsappContact: formData.whatsapp,
-      };
+      // ✅ Crear solicitud para cada proveedor seleccionado
+      const requestPromises = formData.selectedProviders.map((providerId) => {
+        const requestData = {
+          clientId: user.uid,
+          clientName: user.displayName || 'Usuario',
+          clientEmail: user.email || '',
+          clientPhone: user.phone || '',
+          providerId: providerId,
+          providerName: 'Proveedor',
+          categoryId: formData.categoryId,
+          categoryName: formData.categoryName,
+          description: formData.description,
+          location: formData.provinceName || '',
+          urgency: formData.urgency,
+          images: formData.imageUrl ? [formData.imageUrl] : [],
+          regionId: formData.regionId,
+          provinceId: formData.provinceId,
+          whatsappContact: formData.whatsapp,
+        };
+        return createRequest(requestData);
+      });
 
-      const requestId = await createRequest(requestData);
+      await Promise.all(requestPromises);
 
       // ✅ Generar mensaje para WhatsApp
+      const urgencyLabels = {
+        normal: '🟢 Normal',
+        urgente: '🟡 Urgente',
+        'muy-urgente': '🔴 Muy urgente',
+      };
+
       const message = `Hola, soy ${user.displayName || 'Usuario'} de MiMaestro.
 
 📋 Solicitud: ${formData.categoryName}
 📝 Descripción: ${formData.description}
 📍 Ubicación: ${formData.provinceName || 'No especificada'}
+⏰ Urgencia: ${urgencyLabels[formData.urgency]}
+
+👨‍🔧 Maestros seleccionados: ${formData.selectedProviders.length}
 
 ¿Podrías ayudarme con este proyecto? ¡Gracias! 🏗️`;
 
@@ -145,8 +164,8 @@ export default function NewRequestPage() {
       const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
       window.open(whatsappLink, '_blank');
-      toast.success('📩 Solicitud enviada correctamente');
-      router.push(`/dashboard/requests/${requestId}`);
+      toast.success(`📩 Solicitud enviada a ${formData.selectedProviders.length} maestro(s)`);
+      router.push('/dashboard/requests');
     } catch (error: any) {
       log.error('Error enviando solicitud:', error);
       toast.error(error.message || 'Error al enviar la solicitud');
@@ -158,6 +177,7 @@ export default function NewRequestPage() {
   const isFormValid =
     formData.categoryId &&
     formData.provinceId &&
+    formData.selectedProviders.length > 0 &&
     formData.description.length >= 10 &&
     formData.whatsapp.length >= 8;
 
@@ -165,9 +185,9 @@ export default function NewRequestPage() {
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in pb-20">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📝 Nueva solicitud</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📝 Nueva Solicitud</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
-          Completa los datos y envía tu solicitud
+          Completa los datos y envía tu solicitud a los maestros
         </p>
       </div>
 
@@ -176,7 +196,7 @@ export default function NewRequestPage() {
         <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
           ¿Qué necesitas hacer?
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {CATEGORIES.map((category) => (
             <button
               key={category.id}
@@ -187,9 +207,7 @@ export default function NewRequestPage() {
                   : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700'
               }`}
             >
-              <div className="w-10 h-10 mx-auto mb-1 text-primary-600 dark:text-primary-400">
-                <CategoryIcon icon={category.icon} size={32} />
-              </div>
+              <div className="text-3xl mb-1">{category.icon}</div>
               <div className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">
                 {category.label}
               </div>
@@ -203,75 +221,33 @@ export default function NewRequestPage() {
         )}
       </div>
 
-      {/* 2. Detalles de la Solicitud */}
+      {/* 2. Detalles de la solicitud */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 space-y-4">
         <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Detalles de la solicitud
         </h2>
 
-        {/* Categoría seleccionada */}
+        {/* Descripción */}
         <div>
           <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-            Categoría
+            Descripción breve *
           </label>
-          <div className="px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm text-gray-700 dark:text-gray-300">
-            {formData.categoryName || 'No seleccionada'}
-          </div>
-        </div>
-
-        {/* Comuna (Región + Provincia) */}
-        <div className="space-y-2">
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
-            Ubicación
-          </label>
-          <select
-            value={formData.regionId}
-            onChange={(e) => {
-              const regionId = e.target.value;
-              setFormData((prev) => ({
-                ...prev,
-                regionId,
-                provinceId: '',
-                provinceName: '',
-              }));
-            }}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 text-sm appearance-none"
-          >
-            <option value="">Selecciona una región</option>
-            {REGIONS_CHILE.map((region) => (
-              <option key={region.id} value={region.id}>
-                {region.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={formData.provinceId}
-            onChange={(e) => {
-              const provinceId = e.target.value;
-              const province = availableProvinces.find((p) => p.id === provinceId);
-              setFormData((prev) => ({
-                ...prev,
-                provinceId,
-                provinceName: province?.name || '',
-              }));
-            }}
-            disabled={!formData.regionId}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 text-sm disabled:opacity-50 appearance-none"
-          >
-            <option value="">Selecciona una comuna</option>
-            {availableProvinces.map((province) => (
-              <option key={province.id} value={province.id}>
-                {province.name}
-              </option>
-            ))}
-          </select>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+            placeholder="Describe el problema o proyecto..."
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 text-sm resize-none"
+            rows={3}
+          />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {formData.description.length}/10 caracteres mínimo
+          </p>
         </div>
 
         {/* Foto del problema */}
         <div>
           <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-            Foto del problema
+            Foto del problema (opcional)
           </label>
           <div className="flex items-center gap-3">
             {formData.imageUrl ? (
@@ -316,21 +292,105 @@ export default function NewRequestPage() {
           </div>
         </div>
 
-        {/* Descripción breve */}
+        {/* Ubicación */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
+            Ubicación *
+          </label>
+          <select
+            value={formData.regionId}
+            onChange={(e) => {
+              const regionId = e.target.value;
+              setFormData((prev) => ({
+                ...prev,
+                regionId,
+                provinceId: '',
+                provinceName: '',
+              }));
+            }}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 text-sm"
+          >
+            <option value="">Selecciona una región</option>
+            {REGIONS_CHILE.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={formData.provinceId}
+            onChange={(e) => {
+              const provinceId = e.target.value;
+              const province = availableProvinces.find((p) => p.id === provinceId);
+              setFormData((prev) => ({
+                ...prev,
+                provinceId,
+                provinceName: province?.name || '',
+              }));
+            }}
+            disabled={!formData.regionId}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 text-sm disabled:opacity-50"
+          >
+            <option value="">Selecciona una comuna</option>
+            {availableProvinces.map((province) => (
+              <option key={province.id} value={province.id}>
+                {province.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Selección de maestros */}
+        {formData.provinceId && (
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+              Selecciona los maestros *
+            </label>
+            <ProviderListSelector
+              regionId={formData.regionId}
+              provinceId={formData.provinceId}
+              selectedProviders={formData.selectedProviders}
+              onSelect={(providerIds) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  selectedProviders: providerIds,
+                }));
+              }}
+            />
+          </div>
+        )}
+
+        {/* Urgencia */}
         <div>
           <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-            Descripción breve *
+            Nivel de urgencia *
           </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-            placeholder="Describe el problema o proyecto..."
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 text-sm resize-none"
-            rows={3}
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {formData.description.length}/10 caracteres mínimo
-          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { value: 'normal', label: '🟢 Normal', description: 'Sin prisa' },
+              { value: 'urgente', label: '🟡 Urgente', description: 'Pronto' },
+              { value: 'muy-urgente', label: '🔴 Muy urgente', description: 'Inmediato' },
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    urgency: option.value as UrgencyLevel,
+                  }))
+                }
+                className={`p-3 rounded-xl border-2 transition-all text-center ${
+                  formData.urgency === option.value
+                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-2 ring-primary-500/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-sm font-medium">{option.label}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{option.description}</div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* WhatsApp */}
