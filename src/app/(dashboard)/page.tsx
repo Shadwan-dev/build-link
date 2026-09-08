@@ -14,8 +14,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // ✅ Redirigir a solicitudes cuando el usuario esté autenticado
-    if (!loading && !roleLoading && user) {
-      router.replace('/dashboard/requests');
+    if (!loading && !roleLoading) {
+      if (user) {
+        router.replace('/dashboard/requests');
+      } else {
+        router.replace('/login');
+      }
     }
   }, [user, loading, roleLoading, router]);
 
@@ -29,11 +33,6 @@ export default function DashboardPage() {
         </div>
       </div>
     );
-  }
-
-  // ✅ Si no hay usuario, redirigir al login (el useEffect lo hará)
-  if (!user) {
-    return null;
   }
 
   return null;
