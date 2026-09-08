@@ -1,21 +1,24 @@
+// app/page.tsx
 'use client';
 
 import { BackgroundCarousel } from '@/components/common/BackgroundCarousel';
 import { MiMaestroLogo } from '@/components/common/MiMaestroLogo';
+import { QuickRequestModal } from '@/components/home/QuickRequestModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowRight, Building2, Hammer, Home, Loader2, Star, Users, Wrench } from 'lucide-react';
+import { Building2, Hammer, Home, Loader2, Star, Users, Wrench, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [showQuickRequest, setShowQuickRequest] = useState(false);
 
   // Redirigir al dashboard si el usuario ya está autenticado
   useEffect(() => {
     if (!loading && user) {
-      router.replace('/dashboard');
+      router.replace('/dashboard/requests');
     }
   }, [user, loading, router]);
 
@@ -44,12 +47,12 @@ export default function HomePage() {
       {/* Contenido */}
       <div className="relative z-10 container mx-auto px-4 py-12 md:py-20">
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto">
-          {/* Logo Grande con efecto de brillo */}
+          {/* Logo */}
           <div className="mb-8 filter drop-shadow-[0_0_30px_rgba(37,99,235,0.2)] hover:drop-shadow-[0_0_50px_rgba(37,99,235,0.3)] transition-all duration-300">
             <MiMaestroLogo size="2xl" showTagline={true} />
           </div>
 
-          {/* Título principal */}
+          {/* Título */}
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
             Encuentra al <span className="text-yellow-400">profesional</span>
             <br />
@@ -61,18 +64,27 @@ export default function HomePage() {
             carpintería y más. Calidad garantizada.
           </p>
 
-          {/* Botones de acción */}
+          {/* ✅ Botones de acción - ACTUALIZADOS */}
           <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-            <Link
-              href="/register"
+            {/* ✅ Botón de solicitud rápida - NUEVO */}
+            <button
+              onClick={() => setShowQuickRequest(true)}
               className="flex-1 px-8 py-4 bg-yellow-400 text-gray-900 rounded-xl font-semibold hover:bg-yellow-300 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 backdrop-blur-sm"
             >
-              Comenzar ahora
-              <ArrowRight className="w-5 h-5" />
+              <Zap className="w-5 h-5" />
+              Solicitud rápida
+            </button>
+
+            <Link
+              href="/register"
+              className="flex-1 px-8 py-4 bg-white/20 backdrop-blur-md text-white rounded-xl font-semibold border-2 border-white/30 hover:bg-white/30 transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
+            >
+              Registrarme
             </Link>
+
             <Link
               href="/login"
-              className="flex-1 px-8 py-4 bg-white/20 backdrop-blur-md text-white rounded-xl font-semibold border-2 border-white/30 hover:bg-white/30 transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
+              className="flex-1 px-8 py-4 bg-white/10 backdrop-blur-md text-white/80 rounded-xl font-medium border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center"
             >
               Iniciar sesión
             </Link>
@@ -144,6 +156,9 @@ export default function HomePage() {
           </div>
         </footer>
       </div>
+
+      {/* ✅ Modal de solicitud rápida */}
+      <QuickRequestModal isOpen={showQuickRequest} onClose={() => setShowQuickRequest(false)} />
     </div>
   );
 }

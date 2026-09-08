@@ -361,7 +361,7 @@ export default function NewRequestPage() {
           </div>
         )}
 
-        {/* Urgencia */}
+        {/* Urgencia
         <div>
           <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
             Nivel de urgencia *
@@ -392,6 +392,7 @@ export default function NewRequestPage() {
             ))}
           </div>
         </div>
+        */}
 
         {/* WhatsApp */}
         <div>
