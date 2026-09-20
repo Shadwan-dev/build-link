@@ -125,10 +125,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await loadUserData(firebaseUser);
         await new Promise((resolve) => setTimeout(resolve, 100));
-        router.replace('/dashboard');
+        router.replace('/dashboard/requests'); // ✅ CORREGIDO
       } catch (error) {
         log.error('Error en redirección:', error);
-        router.replace('/dashboard');
+        router.replace('/dashboard/requests'); // ✅ CORREGIDO
       }
     },
     [loadUserData, router]
@@ -199,8 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         window.location.pathname === '/';
 
       if (isAuthPath) {
-        log.info('🔄 Redirigiendo a dashboard');
-        router.replace('/dashboard');
+        router.replace('/dashboard/requests'); // ✅ CORREGIDO
       }
     }
   }, [loading, initialized, firebaseUser, router]);

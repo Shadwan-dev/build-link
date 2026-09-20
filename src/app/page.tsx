@@ -15,7 +15,7 @@ export default function HomePage() {
   const router = useRouter();
   const [showQuickRequest, setShowQuickRequest] = useState(false);
 
-  // Redirigir al dashboard si el usuario ya está autenticado
+  // ✅ AL INICIAR SESIÓN → VA A SOLICITUDES
   useEffect(() => {
     if (!loading && user) {
       router.replace('/dashboard/requests');

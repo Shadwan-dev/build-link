@@ -1,39 +1,44 @@
 // app/(dashboard)/page.tsx
 'use client';
 
+import { ClientDashboard } from '@/components/dashboard/client/ClientDashboard';
+import { ProviderDashboard } from '@/components/dashboard/providers/ProviderDashboard';
+import { RoleSelector } from '@/components/dashboard/RoleSelector';
+import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
 import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
-  const { isLoading: roleLoading } = useRole();
-  const router = useRouter();
+  const { currentRole, hasRole, isLoading: roleLoading } = useRole();
 
-  useEffect(() => {
-    // ✅ Redirigir a solicitudes cuando el usuario esté autenticado
-    if (!loading && !roleLoading) {
-      if (user) {
-        router.replace('/dashboard/requests');
-      } else {
-        router.replace('/login');
-      }
-    }
-  }, [user, loading, roleLoading, router]);
-
-  // ✅ Mostrar carga mientras se verifica autenticación
+  // ✅ Estado de carga
   if (loading || roleLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400 font-medium">Cargando...</p>
+          <p className="text-gray-600 dark:text-gray-400 font-medium">Cargando dashboard...</p>
         </div>
       </div>
     );
   }
 
-  return null;
+  // ✅ Si el usuario no tiene rol, mostrar selector
+  if (user && !hasRole) {
+    return <RoleSelector />;
+  }
+
+  // ✅ Dashboard normal
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {hasRole && (
+        <div className="flex justify-end">
+          <RoleSwitcher />
+        </div>
+      )}
+      {currentRole === 'provider' ? <ProviderDashboard /> : <ClientDashboard />}
+    </div>
+  );
 }

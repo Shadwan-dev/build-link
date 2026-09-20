@@ -3,9 +3,11 @@
 import { BackgroundCarousel } from '@/components/common/BackgroundCarousel';
 import { GoogleIcon } from '@/components/common/GoogleIcon';
 import { MiMaestroLogo } from '@/components/common/MiMaestroLogo';
+import { QuickRequestModal } from '@/components/home/QuickRequestModal';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   AlertCircle,
+  ArrowLeft,
   Briefcase,
   CheckCircle,
   Eye,
@@ -15,6 +17,7 @@ import {
   Mail,
   Phone,
   User,
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -41,6 +44,7 @@ export default function RegisterPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showQuickRequest, setShowQuickRequest] = useState(false);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     displayName: '',
@@ -171,6 +175,14 @@ export default function RegisterPage() {
             <div className="flex justify-center">
               <MiMaestroLogo size="lg" showTagline={true} />
             </div>
+            {/* ✅ Botón para volver al inicio */}
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 mt-4 text-white/70 hover:text-white transition text-sm group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              Volver al inicio
+            </Link>
           </div>
 
           {step === 2 && (
@@ -274,6 +286,27 @@ export default function RegisterPage() {
                 </button>
               </p>
             )}
+
+            {/* ✅ Botón de Solicitud Rápida - NUEVO */}
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setShowQuickRequest(true)}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-yellow-400/20 backdrop-blur-sm text-yellow-300 rounded-xl font-semibold border-2 border-yellow-400/30 hover:bg-yellow-400/30 transition"
+              >
+                <Zap className="w-5 h-5" />
+                Solicitud rápida sin registro
+              </button>
+              <p className="text-xs text-white/60 text-center mt-2">
+                Envía tu solicitud sin crear una cuenta
+              </p>
+            </div>
+
+            {/* ✅ Modal al final del componente */}
+            <QuickRequestModal
+              isOpen={showQuickRequest}
+              onClose={() => setShowQuickRequest(false)}
+            />
           </div>
 
           <div className="text-center mt-8 pt-4 border-t border-white/10 text-xs text-white/70 drop-shadow-md">
