@@ -6,10 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { uploadToCloudinary } from '@/lib/cloudinary/upload.service';
 import { CATEGORIES } from '@/lib/constants/categories';
 import { REGIONS_CHILE, getProvincesByRegion } from '@/lib/constants/regions.chile';
+import { getProviderById } from '@/lib/firebase/provider.service';
 import { createRequest } from '@/lib/firebase/requests.service';
 import { log } from '@/lib/utils/logger';
 import { UrgencyLevel } from '@/types/request.types';
-import { Loader2, Send, Upload, X } from 'lucide-react';
+import { CheckCircle, Loader2, MessageCircle, Send, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -33,8 +34,13 @@ export default function NewRequestPage() {
     whatsapp: '',
     imageUrl: '',
     selectedProviders: [] as string[],
-    urgency: 'normal' as UrgencyLevel,
   });
+
+  // ✅ Estado del modal de envío
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [providersToSend, setProvidersToSend] = useState<
+    { id: string; name: string; phone: string; sent: boolean }[]
+  >([]);
 
   // ✅ Obtener provincias según región seleccionada
   const availableProvinces = formData.regionId ? getProvincesByRegion(formData.regionId) : [];
@@ -88,6 +94,62 @@ export default function NewRequestPage() {
     }
   };
 
+  // ✅ Generar mensaje para WhatsApp
+  const generateMessage = () => {
+    return `Hola, soy ${user?.displayName || 'Usuario'} de MiMaestro.
+
+📋 Solicitud: ${formData.categoryName}
+📝 Descripción: ${formData.description}
+📍 Ubicación: ${formData.provinceName || 'No especificada'}
+
+¿Podrías ayudarme con este proyecto? ¡Gracias! 🏗️`;
+  };
+
+  // ✅ Enviar a un proveedor específico
+  const sendToProvider = (provider: { id: string; name: string; phone: string; sent: boolean }) => {
+    if (!provider.phone) {
+      toast.error(`${provider.name} no tiene teléfono registrado`);
+      return;
+    }
+
+    const phone = provider.phone.replace(/[^0-9+]/g, '');
+    const message = generateMessage();
+    const link = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    window.open(link, '_blank');
+
+    setProvidersToSend((prev) =>
+      prev.map((p) => (p.id === provider.id ? { ...p, sent: true } : p))
+    );
+    toast.success(`📱 Mensaje enviado a ${provider.name}`);
+  };
+
+  // ✅ Enviar a todos los proveedores
+  const sendToAll = () => {
+    const unsent = providersToSend.filter((p) => p.phone && !p.sent);
+
+    if (unsent.length === 0) {
+      toast.error('No hay proveedores pendientes por enviar');
+      return;
+    }
+
+    unsent.forEach((provider, index) => {
+      setTimeout(() => {
+        const phone = provider.phone.replace(/[^0-9+]/g, '');
+        const message = generateMessage();
+        const link = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+        window.open(link, '_blank');
+
+        setProvidersToSend((prev) =>
+          prev.map((p) => (p.id === provider.id ? { ...p, sent: true } : p))
+        );
+      }, index * 600); // 600ms entre cada apertura para evitar bloqueo
+    });
+
+    toast.success(`📱 Enviando mensajes a ${unsent.length} proveedor(es)...`);
+  };
+
   // ✅ Validar y enviar
   const handleSubmit = async () => {
     if (!formData.categoryId) {
@@ -118,7 +180,7 @@ export default function NewRequestPage() {
 
     setLoading(true);
     try {
-      // ✅ Crear solicitud para cada proveedor seleccionado
+      // ✅ 1. Crear solicitud para cada proveedor seleccionado
       const requestPromises = formData.selectedProviders.map((providerId) => {
         const requestData = {
           clientId: user.uid,
@@ -131,7 +193,7 @@ export default function NewRequestPage() {
           categoryName: formData.categoryName,
           description: formData.description,
           location: formData.provinceName || '',
-          urgency: formData.urgency,
+          urgency: 'normal' as UrgencyLevel,
           images: formData.imageUrl ? [formData.imageUrl] : [],
           regionId: formData.regionId,
           provinceId: formData.provinceId,
@@ -142,36 +204,34 @@ export default function NewRequestPage() {
 
       await Promise.all(requestPromises);
 
-      // ✅ Generar mensaje para WhatsApp
-      const urgencyLabels = {
-        normal: '🟢 Normal',
-        urgente: '🟡 Urgente',
-        'muy-urgente': '🔴 Muy urgente',
-      };
+      // ✅ 2. Cargar datos de los proveedores para el modal
+      const providerData = await Promise.all(
+        formData.selectedProviders.map(async (id) => {
+          const provider = await getProviderById(id);
+          return {
+            id,
+            name: provider?.displayName || 'Proveedor',
+            phone: provider?.phone || '',
+            sent: false,
+          };
+        })
+      );
 
-      const message = `Hola, soy ${user.displayName || 'Usuario'} de MiMaestro.
-
-📋 Solicitud: ${formData.categoryName}
-📝 Descripción: ${formData.description}
-📍 Ubicación: ${formData.provinceName || 'No especificada'}
-⏰ Urgencia: ${urgencyLabels[formData.urgency]}
-
-👨‍🔧 Maestros seleccionados: ${formData.selectedProviders.length}
-
-¿Podrías ayudarme con este proyecto? ¡Gracias! 🏗️`;
-
-      const phone = formData.whatsapp.replace(/[^0-9+]/g, '');
-      const whatsappLink = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-
-      window.open(whatsappLink, '_blank');
-      toast.success(`📩 Solicitud enviada a ${formData.selectedProviders.length} maestro(s)`);
-      router.push('/dashboard/requests');
+      setProvidersToSend(providerData);
+      setShowSendModal(true);
+      toast.success(`📩 ${formData.selectedProviders.length} solicitud(es) creada(s)`);
     } catch (error: any) {
       log.error('Error enviando solicitud:', error);
       toast.error(error.message || 'Error al enviar la solicitud');
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ Finalizar y redirigir
+  const handleFinish = () => {
+    setShowSendModal(false);
+    router.push('/dashboard/requests');
   };
 
   const isFormValid =
@@ -361,39 +421,6 @@ export default function NewRequestPage() {
           </div>
         )}
 
-        {/* Urgencia
-        <div>
-          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-            Nivel de urgencia *
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { value: 'normal', label: '🟢 Normal', description: 'Sin prisa' },
-              { value: 'urgente', label: '🟡 Urgente', description: 'Pronto' },
-              { value: 'muy-urgente', label: '🔴 Muy urgente', description: 'Inmediato' },
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    urgency: option.value as UrgencyLevel,
-                  }))
-                }
-                className={`p-3 rounded-xl border-2 transition-all text-center ${
-                  formData.urgency === option.value
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-2 ring-primary-500/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-sm font-medium">{option.label}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{option.description}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-        */}
-
         {/* WhatsApp */}
         <div>
           <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
@@ -430,8 +457,115 @@ export default function NewRequestPage() {
 
       {/* Mensaje de ayuda */}
       <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-        Al enviar, serás redirigido a WhatsApp con el mensaje predefinido
+        Al enviar, podrás contactar a cada maestro por WhatsApp
       </p>
+
+      {/* ✅ MODAL DE ENVÍO A WHATSAPP */}
+      {showSendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 border border-gray-200 dark:border-gray-700 animate-slide-up">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                📱 Enviar por WhatsApp
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Envía el mensaje a cada maestro seleccionado
+              </p>
+            </div>
+
+            {/* Mensaje previsualización */}
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                📝 Mensaje a enviar
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                {generateMessage()}
+              </p>
+            </div>
+
+            {/* Lista de proveedores */}
+            <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
+              {providersToSend.map((provider) => (
+                <div
+                  key={provider.id}
+                  className={`flex items-center justify-between p-3 rounded-lg border transition ${
+                    provider.sent
+                      ? 'border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
+                      : 'border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                      {provider.sent ? (
+                        <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <MessageCircle className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {provider.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {provider.phone || 'Sin teléfono'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => sendToProvider(provider)}
+                    disabled={!provider.phone || provider.sent}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 ${
+                      provider.sent
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                        : 'bg-green-500 text-white hover:bg-green-600'
+                    } disabled:opacity-50`}
+                  >
+                    {provider.sent ? (
+                      <>
+                        <CheckCircle className="w-3 h-3" />
+                        Enviado
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="w-3 h-3" />
+                        Enviar
+                      </>
+                    )}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Botones */}
+            <div className="space-y-2">
+              <button
+                onClick={sendToAll}
+                disabled={providersToSend.every((p) => p.sent || !p.phone)}
+                className="w-full py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Enviar a todos
+              </button>
+
+              <button
+                onClick={handleFinish}
+                className="w-full py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm"
+              >
+                Finalizar y ver mis solicitudes
+              </button>
+            </div>
+
+            <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-3">
+              💡 Si el navegador bloquea ventanas, haz clic en "Enviar" para cada maestro
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

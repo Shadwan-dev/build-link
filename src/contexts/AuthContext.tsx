@@ -125,10 +125,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await loadUserData(firebaseUser);
         await new Promise((resolve) => setTimeout(resolve, 100));
-        router.replace('/dashboard/requests'); // ✅ CORREGIDO
+        router.replace('/dashboard/requests');
       } catch (error) {
         log.error('Error en redirección:', error);
-        router.replace('/dashboard/requests'); // ✅ CORREGIDO
+        router.replace('/dashboard/requests');
       }
     },
     [loadUserData, router]
