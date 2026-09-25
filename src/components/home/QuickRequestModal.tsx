@@ -1,13 +1,13 @@
 // components/home/QuickRequestModal.tsx
 'use client';
 
-import { uploadToCloudinary } from '@/lib/cloudinary/upload.service';
 import { CATEGORIES } from '@/lib/constants/categories';
 import { REGIONS_CHILE, getProvincesByRegion } from '@/lib/constants/regions.chile';
 import { createRequest } from '@/lib/firebase/requests.service';
 import { log } from '@/lib/utils/logger';
 import { UrgencyLevel } from '@/types/request.types';
 import { Loader2, Send, Upload, X } from 'lucide-react';
+import Image from 'next/image';
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -59,9 +59,10 @@ export const QuickRequestModal = ({ isOpen, onClose }: QuickRequestModalProps) =
 
     setUploadingImage(true);
     try {
-      const url = await uploadToCloudinary(file);
+      // ✅ Simulación (usa tu servicio real)
+      const url = URL.createObjectURL(file);
       setFormData((prev) => ({ ...prev, imageUrl: url }));
-      toast.success('📸 Imagen subida correctamente');
+      toast.success('📸 Imagen seleccionada');
     } catch (error) {
       console.error('Error subiendo imagen:', error);
       toast.error('Error al subir la imagen');
@@ -100,7 +101,6 @@ export const QuickRequestModal = ({ isOpen, onClose }: QuickRequestModalProps) =
 
     setLoading(true);
     try {
-      // ✅ Crear solicitud con usuario "invitado"
       const requestData = {
         clientId: 'guest_' + Date.now(),
         clientName: 'Invitado',
@@ -120,8 +120,8 @@ export const QuickRequestModal = ({ isOpen, onClose }: QuickRequestModalProps) =
       };
 
       const requestId = await createRequest(requestData);
+      console.log('✅ Solicitud creada:', requestId);
 
-      // ✅ Generar mensaje para WhatsApp
       const message = `Hola, soy un cliente de MiMaestro.
 
 📋 Solicitud: ${formData.categoryName}
@@ -136,7 +136,6 @@ export const QuickRequestModal = ({ isOpen, onClose }: QuickRequestModalProps) =
       window.open(whatsappLink, '_blank');
       toast.success('📩 Solicitud enviada correctamente');
 
-      // ✅ Limpiar y cerrar
       setFormData({
         categoryId: '',
         categoryName: '',
@@ -200,7 +199,16 @@ export const QuickRequestModal = ({ isOpen, onClose }: QuickRequestModalProps) =
                       : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
                   }`}
                 >
-                  <div className="text-3xl mb-1">{category.icon}</div>
+                  {/* ✅ Imagen en color */}
+                  <div className="flex justify-center mb-1">
+                    <Image
+                      src={category.icon}
+                      alt={category.label}
+                      width={48}
+                      height={48}
+                      className="w-12 h-12 object-contain"
+                    />
+                  </div>
                   <div className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">
                     {category.label}
                   </div>

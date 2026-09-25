@@ -1,7 +1,9 @@
+// components/dashboard/requests/CategorySelector.tsx
 'use client';
 
 import { CATEGORIES } from '@/lib/constants/categories';
 import { Search } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 
 interface CategorySelectorProps {
@@ -18,6 +20,7 @@ export const CategorySelector = ({ selectedCategory, onSelect }: CategorySelecto
 
   return (
     <div className="space-y-4">
+      {/* Buscador */}
       <div className="relative">
         <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
         <input
@@ -29,6 +32,7 @@ export const CategorySelector = ({ selectedCategory, onSelect }: CategorySelecto
         />
       </div>
 
+      {/* Grid de categorías */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {filteredCategories.map((category) => (
           <button
@@ -40,7 +44,16 @@ export const CategorySelector = ({ selectedCategory, onSelect }: CategorySelecto
                 : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md'
             }`}
           >
-            <div className="text-3xl mb-2">{category.icon}</div>
+            {/* ✅ Imagen en color */}
+            <div className="flex justify-center mb-2">
+              <Image
+                src={category.icon}
+                alt={category.label}
+                width={64}
+                height={64}
+                className="w-16 h-16 object-contain"
+              />
+            </div>
             <div className="text-sm font-medium text-gray-900 dark:text-white">
               {category.label}
             </div>

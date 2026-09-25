@@ -11,6 +11,7 @@ import { createRequest } from '@/lib/firebase/requests.service';
 import { log } from '@/lib/utils/logger';
 import { UrgencyLevel } from '@/types/request.types';
 import { CheckCircle, Loader2, MessageCircle, Send, Upload, X } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -23,7 +24,6 @@ export default function NewRequestPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ Estado del formulario
   const [formData, setFormData] = useState({
     categoryId: '',
     categoryName: '',
@@ -36,16 +36,13 @@ export default function NewRequestPage() {
     selectedProviders: [] as string[],
   });
 
-  // ✅ Estado del modal de envío
   const [showSendModal, setShowSendModal] = useState(false);
   const [providersToSend, setProvidersToSend] = useState<
     { id: string; name: string; phone: string; sent: boolean }[]
   >([]);
 
-  // ✅ Obtener provincias según región seleccionada
   const availableProvinces = formData.regionId ? getProvincesByRegion(formData.regionId) : [];
 
-  // ✅ Seleccionar categoría
   const handleCategorySelect = (categoryId: string) => {
     const category = CATEGORIES.find((c) => c.id === categoryId);
     setFormData((prev) => ({
@@ -55,7 +52,6 @@ export default function NewRequestPage() {
     }));
   };
 
-  // ✅ Subir imagen a Cloudinary
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -86,7 +82,6 @@ export default function NewRequestPage() {
     }
   };
 
-  // ✅ Remover imagen
   const removeImage = () => {
     setFormData((prev) => ({ ...prev, imageUrl: '' }));
     if (fileInputRef.current) {
@@ -94,7 +89,6 @@ export default function NewRequestPage() {
     }
   };
 
-  // ✅ Generar mensaje para WhatsApp
   const generateMessage = () => {
     return `Hola, soy ${user?.displayName || 'Usuario'} de MiMaestro.
 
@@ -105,7 +99,6 @@ export default function NewRequestPage() {
 ¿Podrías ayudarme con este proyecto? ¡Gracias! 🏗️`;
   };
 
-  // ✅ Enviar a un proveedor específico
   const sendToProvider = (provider: { id: string; name: string; phone: string; sent: boolean }) => {
     if (!provider.phone) {
       toast.error(`${provider.name} no tiene teléfono registrado`);
@@ -124,7 +117,6 @@ export default function NewRequestPage() {
     toast.success(`📱 Mensaje enviado a ${provider.name}`);
   };
 
-  // ✅ Enviar a todos los proveedores
   const sendToAll = () => {
     const unsent = providersToSend.filter((p) => p.phone && !p.sent);
 
@@ -144,13 +136,12 @@ export default function NewRequestPage() {
         setProvidersToSend((prev) =>
           prev.map((p) => (p.id === provider.id ? { ...p, sent: true } : p))
         );
-      }, index * 600); // 600ms entre cada apertura para evitar bloqueo
+      }, index * 600);
     });
 
     toast.success(`📱 Enviando mensajes a ${unsent.length} proveedor(es)...`);
   };
 
-  // ✅ Validar y enviar
   const handleSubmit = async () => {
     if (!formData.categoryId) {
       toast.error('Selecciona una categoría');
@@ -180,7 +171,6 @@ export default function NewRequestPage() {
 
     setLoading(true);
     try {
-      // ✅ 1. Crear solicitud para cada proveedor seleccionado
       const requestPromises = formData.selectedProviders.map((providerId) => {
         const requestData = {
           clientId: user.uid,
@@ -204,7 +194,6 @@ export default function NewRequestPage() {
 
       await Promise.all(requestPromises);
 
-      // ✅ 2. Cargar datos de los proveedores para el modal
       const providerData = await Promise.all(
         formData.selectedProviders.map(async (id) => {
           const provider = await getProviderById(id);
@@ -228,7 +217,6 @@ export default function NewRequestPage() {
     }
   };
 
-  // ✅ Finalizar y redirigir
   const handleFinish = () => {
     setShowSendModal(false);
     router.push('/dashboard/requests');
@@ -267,7 +255,15 @@ export default function NewRequestPage() {
                   : 'border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700'
               }`}
             >
-              <div className="text-3xl mb-1">{category.icon}</div>
+              <div className="flex justify-center mb-1">
+                <Image
+                  src={category.icon}
+                  alt={category.label}
+                  width={48}
+                  height={48}
+                  className="w-12 h-12 object-contain"
+                />
+              </div>
               <div className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">
                 {category.label}
               </div>
@@ -455,7 +451,6 @@ export default function NewRequestPage() {
         )}
       </button>
 
-      {/* Mensaje de ayuda */}
       <p className="text-center text-xs text-gray-500 dark:text-gray-400">
         Al enviar, podrás contactar a cada maestro por WhatsApp
       </p>
@@ -464,7 +459,6 @@ export default function NewRequestPage() {
       {showSendModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 border border-gray-200 dark:border-gray-700 animate-slide-up">
-            {/* Header */}
             <div className="text-center mb-6">
               <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
@@ -477,7 +471,6 @@ export default function NewRequestPage() {
               </p>
             </div>
 
-            {/* Mensaje previsualización */}
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-4">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                 📝 Mensaje a enviar
@@ -487,7 +480,6 @@ export default function NewRequestPage() {
               </p>
             </div>
 
-            {/* Lista de proveedores */}
             <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
               {providersToSend.map((provider) => (
                 <div
@@ -541,7 +533,6 @@ export default function NewRequestPage() {
               ))}
             </div>
 
-            {/* Botones */}
             <div className="space-y-2">
               <button
                 onClick={sendToAll}

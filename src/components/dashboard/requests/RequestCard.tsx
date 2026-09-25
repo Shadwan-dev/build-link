@@ -2,6 +2,7 @@
 'use client';
 
 import { getImageUrl } from '@/lib/cloudinary/image.utils';
+import { getCategoryById } from '@/lib/constants/categories';
 import { Request } from '@/types/request.types';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import { es } from 'date-fns/locale/es';
@@ -15,6 +16,7 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { DeleteRequestButton } from './DeleteRequestButton';
@@ -35,6 +37,9 @@ export const RequestCard = ({
 }: RequestCardProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const router = useRouter();
+
+  // ✅ Obtener categoría DENTRO del componente
+  const category = getCategoryById(request.categoryId);
 
   const isProvider = role === 'provider';
   const isClient = role === 'client';
@@ -81,17 +86,6 @@ export const RequestCard = ({
     return labels[status] || status;
   };
 
-  const getUrgencyLabel = (urgency?: string) => {
-    switch (urgency) {
-      case 'urgente':
-        return '🟡 Urgente';
-      case 'muy-urgente':
-        return '🔴 Muy urgente';
-      default:
-        return '🟢 Normal';
-    }
-  };
-
   const timeAgo = request.createdAt
     ? formatDistanceToNow(new Date(request.createdAt.seconds * 1000), {
         addSuffix: true,
@@ -121,7 +115,6 @@ export const RequestCard = ({
               loading="lazy"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                console.error('❌ Error cargando imagen optimizada:', optimizedImage);
                 if (firstImage) {
                   target.src = firstImage;
                 } else {
@@ -129,11 +122,20 @@ export const RequestCard = ({
                     'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f3f4f6"/%3E%3Ctext x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12"%3E📸%3C/text%3E%3C/svg%3E';
                 }
               }}
-              onLoad={() => console.log('✅ Imagen cargada correctamente:', optimizedImage)}
             />
           ) : (
             <div className="w-full h-full bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-600">
-              <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              {category ? (
+                <Image
+                  src={category.icon}
+                  alt={category.label}
+                  width={48}
+                  height={48}
+                  className="w-12 h-12 object-contain opacity-50"
+                />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              )}
             </div>
           )}
         </div>
@@ -144,6 +146,16 @@ export const RequestCard = ({
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
+                {/* ✅ Icono de categoría como imagen */}
+                {category && (
+                  <Image
+                    src={category.icon}
+                    alt={category.label}
+                    width={24}
+                    height={24}
+                    className="w-6 h-6 object-contain flex-shrink-0"
+                  />
+                )}
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                   {request.categoryName || 'Sin categoría'}
                 </h3>
@@ -152,11 +164,6 @@ export const RequestCard = ({
                 >
                   {getStatusLabel(request.status)}
                 </span>
-                {request.urgency && request.urgency !== 'normal' && (
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                    {getUrgencyLabel(request.urgency)}
-                  </span>
-                )}
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                 {request.description}
@@ -188,6 +195,8 @@ export const RequestCard = ({
                 </button>
               </div>
             )}
+
+            {/* Botón de editar */}
             {showEditButton && (
               <button
                 onClick={(e) => {
@@ -200,18 +209,18 @@ export const RequestCard = ({
                 <Edit2 className="w-4 h-4" />
               </button>
             )}
+
             {showEditModal && (
               <EditRequestModal
                 request={request}
                 onClose={() => setShowEditModal(false)}
                 onSuccess={() => {
-                  // Recargar o actualizar la lista
                   window.location.reload();
                 }}
               />
             )}
 
-            {/* Botón de eliminar para cliente */}
+            {/* Botón de eliminar */}
             {showDeleteButton && (
               <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                 <DeleteRequestButton
